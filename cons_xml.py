@@ -31,7 +31,7 @@ def create_context(context, name, list_index=None, is_root=False):
     return ctx
 
 
-def Renamed_toET(self, context, name=None, parent=None):
+def Renamed_toET(self, context, name=None, parent=None, is_root=False):
     # corner case with Switch e.g.
     if name != self.name:
         ctx = context
@@ -39,7 +39,7 @@ def Renamed_toET(self, context, name=None, parent=None):
         ctx[name] = None
     else:
         ctx = context
-    return self.subcon.toET(context=context, name=self.name, parent=parent)
+    return self.subcon.toET(context=context, name=self.name, parent=parent, is_root=is_root)
 
 
 def Renamed_fromET(self, parent, name, is_root=False):
@@ -73,9 +73,11 @@ def Struct_toET(self, context, name=None, parent=None, is_root=False):
 def Struct_fromET(self, parent, name, is_root=False):
     if not is_root:
         elem = parent.findall(name)
+        if len(elem) == 1:
+            elem = elem[0]
     else:
         elem = parent
-        assert(elem.tag == name)
+        assert(parent.tag == name)
 
     ret = Container()
     size = 0
@@ -83,8 +85,9 @@ def Struct_fromET(self, parent, name, is_root=False):
     for sc in self.subcons:
         data, child_size = sc.fromET(elem, sc.name)
         size += child_size
-        if data is not None:
-            ret[sc.name] = data
+        ret[sc.name] = data
+
+    ret["_size"] = size
 
     return ret, size
 
@@ -93,7 +96,7 @@ Struct.toET = Struct_toET
 Struct.fromET = Struct_fromET
 
 
-def FormatField_toET(self, context, name=None, parent=None):
+def FormatField_toET(self, context, name=None, parent=None, is_root=False):
     if name is None:
         assert (0)
     if parent is None:
@@ -110,9 +113,9 @@ def FormatField_fromET(self, parent, name, is_root=False):
 
     assert (len(self.fmtstr) == 2)
     if self.fmtstr[1] in ["B", "H", "L", "Q", "b", "h", "l", "q"]:
-        return int(elem), self.size
+        return int(elem), self.length
     elif self.fmtstr[1] in ["e", "f", "d"]:
-        return float(elem), self.size
+        return float(elem), self.length
 
     assert (0)
 
@@ -121,7 +124,7 @@ FormatField.toET = FormatField_toET
 FormatField.fromET = FormatField_fromET
 
 
-def Enum_toET(self, context, name=None, parent=None):
+def Enum_toET(self, context, name=None, parent=None, is_root=False):
     # FIXME: only works for FormatFields
     return self.subcon.toET(context, name=name, parent=parent)
 
@@ -133,15 +136,15 @@ def Enum_fromET(self, parent, name, is_root=False):
     mapping = self.encmapping.get(elem, None)
 
     if mapping is None:
-        return self.subcon.fromET(elem)
+        return self.subcon.fromET(parent=parent, name=name)
     else:
-        return mapping, self.subcon.size
+        return elem, self.subcon.length
 
 
 Enum.toET = Enum_toET
 Enum.fromET = Enum_fromET
 
-def Bytes_toET(self, context, name=None, parent=None):
+def Bytes_toET(self, context, name=None, parent=None, is_root=False):
     if name is None:
         assert (0)
     if parent is None:
@@ -164,7 +167,7 @@ Bytes.toET = Bytes_toET
 Bytes.fromET = Bytes_fromET
 
 
-def StringEncoded_toET(self, context, name=None, parent=None):
+def StringEncoded_toET(self, context, name=None, parent=None, is_root=False):
     if name is None:
         assert (0)
     if parent is None:
@@ -177,15 +180,25 @@ def StringEncoded_toET(self, context, name=None, parent=None):
 
 
 def StringEncoded_fromET(self, parent, name, is_root=False):
+    print(parent)
     elem = parent.attrib[name]
-    return elem, self.length
+    if self.encoding == ["ascii", "utf-8"]:
+        size = len(elem)
+    elif self.encoding in ["utf-16-le", "utf-16-be", "utf-16"]:
+        size = len(elem)*2
+    elif self.encoding in ["utf-32"]:
+        size = len(elem)*4
+    else:
+        assert(0)
+
+    return elem, size
 
 
 StringEncoded.toET = StringEncoded_toET
 StringEncoded.fromET = StringEncoded_fromET
 
 
-def IfThenElse_toET(self, context, name=None, parent=None):
+def IfThenElse_toET(self, context, name=None, parent=None, is_root=False):
     assert (context is not None)
 
     if(self.elsesubcon.__class__.__name__ != "Pass"):
@@ -201,7 +214,7 @@ def IfThenElse_toET(self, context, name=None, parent=None):
 
 
 def IfThenElse_fromET(self, parent, name, is_root=False):
-    elem = parent.attrib[name]
+    elem = parent.attrib.get(name, None)
 
     if isinstance(self.elsesubcon, Array):
         assert(self.elsesubcon.count == 0)
@@ -210,16 +223,17 @@ def IfThenElse_fromET(self, parent, name, is_root=False):
     else:
         assert(0)
 
-    if len(elem) == 0:
-        return self.elsesubcon.fromET(elem)
-    return self.thensubcon.fromET(elem)
+    if elem is None:
+        return self.elsesubcon.fromET(parent=parent, name=name)
+
+    return self.thensubcon.fromET(parent=parent, name=name)
 
 
 IfThenElse.toET = IfThenElse_toET
 IfThenElse.fromET = IfThenElse_fromET
 
 
-def Switch_toET(self, context, name=None, parent=None):
+def Switch_toET(self, context, name=None, parent=None, is_root=False):
     key = evaluate(self.keyfunc, context)
     case = self.cases[key]
     return case.toET(context, name=name, parent=parent)
@@ -237,14 +251,14 @@ Switch.toET = Switch_toET
 Switch.fromET = Switch_fromET
 
 
-def Ignore_toET(self, context, name=None, parent=None):
+def Ignore_toET(self, context, name=None, parent=None, is_root=False):
     # does not need to be in the XML (will be rebuilt)
     return None
 
 
 def Ignore_fromET(self, parent, name, is_root=False):
-    # not required in dict, as it will be rebuilt
-    return None
+    # not required in dict, as it will be rebuilt, but size is required
+    return None, self.subcon.length
 
 
 Rebuild.toET = Ignore_toET
@@ -252,14 +266,14 @@ Rebuild.fromET = Ignore_fromET
 Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
 
-def IgnoreCls_toET(context, name=None, parent=None):
+def IgnoreCls_toET(context, name=None, parent=None, is_root=False):
     # does not need to be in the XML (will be rebuilt)
     return None
 
 
 def IgnoreCls_fromET(parent, name, is_root=False):
     # not required in dict, as it will be rebuilt
-    return None
+    return None, 0
 
 
 Tell.toET = IgnoreCls_toET
@@ -268,7 +282,7 @@ Pass.toET = IgnoreCls_toET
 Pass.fromET = IgnoreCls_fromET
 
 
-def Pointer_toET(self, context, name=None, parent=None):
+def Pointer_toET(self, context, name=None, parent=None, is_root=False):
     return self.subcon.toET(context=context, name=name, parent=parent)
 
 
@@ -279,7 +293,7 @@ def Pointer_fromET(self, parent, name, is_root=False):
 Pointer.toET = Pointer_toET
 Pointer.fromET = Pointer_fromET
 
-def GenericList_toET(self, context, name=None, parent=None):
+def GenericList_toET(self, context, name=None, parent=None, is_root=False):
     assert (isinstance(context[name], ListContainer))
     assert(name is not None)
     assert(parent is not None)
@@ -310,16 +324,14 @@ RepeatUntil.toET = GenericList_toET
 RepeatUntil.fromET = GenericList_fromET
 
 
-def LazyBound_toET(self, context, name=None, parent=None):
+def LazyBound_toET(self, context, name=None, parent=None, is_root=False):
     sc = self.subconfunc()
     return sc.toET(context=context, name=name, parent=parent)
 
 
 def LazyBound_fromET(self, parent, name, is_root=False):
-    elem = parent.attrib[name]
-
     sc = self.subconfunc()
-    return sc.fromET(elem)
+    return sc.fromET(parent=parent, name=name)
 
 
 LazyBound.toET = LazyBound_toET

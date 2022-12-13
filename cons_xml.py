@@ -224,6 +224,13 @@ def IfThenElse_toET(self, context, name=None, parent=None, is_root=False):
 def IfThenElse_fromET(self, parent, name, offset=0, is_root=False):
     elem = parent.attrib.get(name, None)
 
+    if elem is None:
+        elem = parent.findall(name)
+        if len(elem) == 1:
+            elem = elem[0]
+        elif len(elem) == 0:
+            elem = None
+
     if isinstance(self.elsesubcon, Array):
         assert(self.elsesubcon.count == 0)
     elif self.elsesubcon.__class__.__name__ == "Pass":
@@ -311,6 +318,7 @@ def GenericList_toET(self, context, name=None, parent=None, is_root=False):
     for item in context[name]:
         ctx = create_context(context, name, list_index=i)
         it = self.subcon.toET(context=ctx, name=i, parent=None)
+        print(it)
         if it is not None:
             parent.append(it)
         else:

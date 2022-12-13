@@ -110,7 +110,6 @@ def test_xml_array():
     assert(str == """<Test foo="true"><int int="2" /><int int="0" /><int int="101" /><int int="0" /><int int="102" /><int int="0" /></Test>""")
 
     xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    pdb.set_trace()
     rebuild = T.build(xml_rebuild)
 
     assert(size == len(data))
@@ -189,3 +188,40 @@ def test_xml_pointer():
     assert(xml_rebuild["test"]["_offset_a1"] == 0)
     assert(xml_rebuild["test"]["_offset_a2"] == 1)
     assert(xml_rebuild["_ptrsize_test"] == 2)
+
+def test_xml_if_array():
+    T = Struct(
+        "foo" / Enum(Int8ul, true=1, false=0),
+        "baz" / Int8ul,
+        "testarr" / If(this.foo == "true", Array(2, Int8ul))
+    )
+
+    data = b"\x01\x08\x00\x08"
+    d = T.parse(data)
+
+    xml = T.toET(d, name="Test", is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+    print(str)
+
+    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    print(d)
+    print(xml_rebuild)
+    rebuild = T.build(xml_rebuild)
+    assert(rebuild == data)
+
+def test_xml_lazybound():
+    T = Struct(
+        "foo" / Enum(Int8ul, true=1, false=0),
+        "baz" / Int8ul,
+        "bar" / If(this.foo == "true", LazyBound(lambda: T))
+    )
+
+    data = b"\x01\x08\x00\x08"
+    d = T.parse(data)
+
+    xml = T.toET(d, name="Test", is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+
+    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    rebuild = T.build(xml_rebuild)
+    assert(rebuild == data)

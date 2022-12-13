@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import sys
 import pdb
-from cons_ess import *
-from cons_sformat import *
+
+from ess import *
+from sformat import *
 
 if __name__ == "__main__":
     essfile = open(sys.argv[1], "rb")

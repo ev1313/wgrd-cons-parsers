@@ -6,8 +6,8 @@ import os
 import sys
 from io import BytesIO
 
-from utils import decompress_zlib
-import xml.etree.ElementTree as ET
+from cons_utils import *
+from cons_xml import *
 
 from construct import *
 

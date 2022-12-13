@@ -2,7 +2,41 @@ from io import BytesIO
 import xml.etree.ElementTree as ET
 from utils import compress_zlib, decompress_zlib
 from cons_xml import *
+import zlib
+from functools import partial
 import itertools
+
+
+def compress_zlib(data, level=9, wbits=15, depth=0):
+    print("  " * depth + "compressing zlib data")
+    d = data
+    io = BytesIO(d)
+    data = BytesIO()
+    z = zlib.compressobj(level=level, wbits=wbits)
+    for block in iter(partial(io.read, 8192), b''):
+        data.write(z.compress(block))
+    data.write(z.flush(zlib.Z_FULL_FLUSH))
+    return bytes(data.getbuffer())
+
+
+def decompress_zlib(data, wbits=0, depth=0):
+    d = data
+    fi = BytesIO(d)
+
+    g = b''
+    z = zlib.decompressobj(wbits)
+    while True:
+        buf = z.unconsumed_tail
+        if buf == b"":
+            buf = fi.read(8192)
+            if buf == b"":
+                break
+        got = z.decompress(buf)
+        if got == b"":
+            break
+        g += got
+        # print(g)
+    return g
 
 
 class ZLibCompressed(Tunnel):

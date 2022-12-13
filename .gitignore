@@ -8,3 +8,4 @@ spk_files/
 spk_out.txt
 .idea
 output.log
+venv/

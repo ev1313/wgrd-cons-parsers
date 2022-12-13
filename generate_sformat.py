@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+import sys
+import pdb
+from cons_ess import *
+from cons_sformat import *
+
+if __name__ == "__main__":
+    essfile = open(sys.argv[1], "rb")
+    essdata = essfile.read()
+
+    ess_header = EssHeader.parse(essdata)
+
+    sformat = Container(
+              isShort="true",
+              channelCount=ess_header.channels,
+              unk3=512,
+              samplerate=ess_header.samplerate,
+              frameCount=ess_header.frameCount,
+              length=2,
+              essLength=len(essdata),
+              essUnk2=0,
+              frameCount2=ess_header.frameCount,
+              data=None)
+
+    sformatdata = SFormat.build(sformat)
+
+    sformatfile = open(sys.argv[2], "wb")
+    sformatfile.write(sformatdata)

@@ -1,0 +1,10 @@
+__pycache__/
+docs/
+out/
+out_ass/
+edat_files/
+spk_files/
+*.bin
+spk_out.txt
+.idea
+output.log

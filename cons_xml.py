@@ -17,19 +17,28 @@ def create_context(context, name, list_index=None, is_root=False):
     else:
         return context
 
-    if isinstance(context[name], Container):
-        ctx = Container(_=context, **context[name])
-    elif isinstance(context[name], ListContainer):
+    data = get_from_context(context, name)
+
+    if isinstance(data, Container):
+        ctx = Container(_=context, **data)
+    elif isinstance(data, ListContainer):
         assert (list_index is not None)
         ctx = Container(_=context)
         ctx._index = list_index
-        ctx[list_index] = context[name][list_index]
+        ctx[f"{name}_{list_index}"] = data[list_index]
     else:
         ctx = Container(_=context)
-        ctx[name] = context[name]
+        ctx[name] = data
 
     return ctx
 
+
+def get_from_context(context, name):
+    idx = context.get("_index", None)
+    if idx is not None:
+        return context[f"{name}_{idx}"]
+    else:
+        return context[name]
 
 def Renamed_toET(self, context, name=None, parent=None, is_root=False):
     # corner case with Switch e.g.
@@ -108,11 +117,11 @@ def FormatField_toET(self, context, name=None, parent=None, is_root=False):
     if parent is None:
         parent = ET.Element(name)
 
-        parent.attrib[name] = str(context[name])
+        parent.attrib[name] = str(get_from_context(context, name))
 
         return parent
 
-    parent.attrib[name] = str(context[name])
+    parent.attrib[name] = str(get_from_context(context, name))
     return None
 
 
@@ -188,7 +197,6 @@ def StringEncoded_toET(self, context, name=None, parent=None, is_root=False):
 
 
 def StringEncoded_fromET(self, parent, name, offset=0, is_root=False):
-    print(parent)
     elem = parent.attrib[name]
     if self.encoding == ["ascii", "utf-8"]:
         size = len(elem)
@@ -311,14 +319,14 @@ Pointer.toET = Pointer_toET
 Pointer.fromET = Pointer_fromET
 
 def GenericList_toET(self, context, name=None, parent=None, is_root=False):
-    assert (isinstance(context[name], ListContainer))
+    data = get_from_context(context, name)
+    assert (isinstance(data, ListContainer))
     assert(name is not None)
     assert(parent is not None)
     i = 0
-    for item in context[name]:
+    for item in data:
         ctx = create_context(context, name, list_index=i)
-        it = self.subcon.toET(context=ctx, name=i, parent=None)
-        print(it)
+        it = self.subcon.toET(context=ctx, name=name, parent=None)
         if it is not None:
             parent.append(it)
         else:
@@ -329,7 +337,9 @@ def GenericList_toET(self, context, name=None, parent=None, is_root=False):
 
 
 def GenericList_fromET(self, parent, name, offset=0, is_root=False):
-    name = self.subcon.name
+    if self.subcon.name is not None:
+        name = self.subcon.name
+
     elems = parent.findall(name)
     size = 0
     ret = []

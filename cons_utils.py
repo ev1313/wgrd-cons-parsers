@@ -1,6 +1,5 @@
 from io import BytesIO
 import xml.etree.ElementTree as ET
-from utils import compress_zlib, decompress_zlib
 from cons_xml import *
 import zlib
 from functools import partial
@@ -138,27 +137,9 @@ class RepeatUntilSize(Subconstruct):
         return dict(type=self.subcon._compileprimitivetype(ksy, bitwise), repeat="until",
                     repeat_until=repr(self.predicate).replace("obj_", "_"))
 
-    def toET(self, context, name=None, parent=None):
-        assert(isinstance(context[name], ListContainer))
-        assert(parent is not None)
 
-        i=0
-        for item in context[name]:
-            ctx = create_context(context, name, list_index=i)
-            it = self.subcon.toET(context=ctx, name=name[:-5], parent=None)
-            if it is not None:
-                parent.append(it)
-            i+=1
-
-        return None
-
-
-    def fromET(self, parent, name):
-        elem = parent.attrib[name]
-
-        assert(isinstance(elem, list))
-        return [self.subcon.fromET(x) for x in elem]
-
+RepeatUntilSize.toET = GenericList_toET
+RepeatUntilSize.fromET = GenericList_fromET
 
 def readArea(type):
     def checkArea(obj, lst, ctx):

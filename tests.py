@@ -220,11 +220,49 @@ def test_xml_if_array():
 
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
-    print(str)
 
     xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    print(d)
-    print(xml_rebuild)
+    rebuild = T.build(xml_rebuild)
+    assert(rebuild == data)
+
+def test_xml_array_array_if_unnamed():
+    T = Struct(
+        "foo" / Enum(Int8ul, true=1, false=0),
+        "baz" / Int8ul,
+        "testarr" / If(this.foo == "true", Array(2, Struct(
+            "idx" / Rebuild(Int8ul, this._index),
+            "t" / Int8ul,
+            )))
+    )
+
+    data = b"\x01\x08\x00\x01\x01\x08"
+    d = T.parse(data)
+
+    xml = T.toET(d, name="Test", is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+
+    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    rebuild = T.build(xml_rebuild)
+    assert(rebuild == data)
+
+
+def test_xml_array_rebuild_index():
+    T = Struct(
+        "foo" / Enum(Int8ul, true=1, false=0),
+        "baz" / Int8ul,
+        "testarr" / If(this.foo == "true", Array(2, "testdata" / Struct(
+            "idx" / Rebuild(Int8ul, this._index),
+            "t" / Int8ul,
+        )))
+    )
+
+    data = b"\x01\x08\x00\x01\x01\x08"
+    d = T.parse(data)
+
+    xml = T.toET(d, name="Test", is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+
+    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
     rebuild = T.build(xml_rebuild)
     assert(rebuild == data)
 
@@ -269,3 +307,49 @@ def test_xml_switch():
     rebuild = T.build(xml_rebuild)
     assert(rebuild == data)
 
+def test_xml_switch_nested():
+    T = Struct(
+        "foo" / Int8ul,
+        "baz" / Switch(this.foo, {
+            0x00000001: "Int8" / Struct("value" / Int8ul),
+            0x00000002: "Int32" / Struct("asd" / Switch(this._.foo, {
+                0x00000002: "testitem1" / Struct("value" / Int8ul),
+                0x00000001: "testitem2" / Struct("value" / Int32sl),
+            })),
+        }),
+        )
+
+    data = b"\x02\x08"
+    d = T.parse(data)
+
+    xml = T.toET(d, name="Test", is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+    assert(str == """<Test foo="2"><Int32><testitem1 value="8" /></Int32></Test>""")
+
+    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    rebuild = T.build(xml_rebuild)
+    assert(rebuild == data)
+
+def test_xml_switch_rebuild():
+    T = Struct(
+        "foo" / Rebuild(Int8ul, this._switchid_baz),
+        "baz" / Switch(this.foo, {
+            0x00000001: "Int8" / Struct("value" / Int8ul),
+            0x00000002: "Int32" / Struct("value" / Int32sl),
+        }),
+        "asd" / Switch(this.foo, {
+            0x00000002: "testitem1" / Struct("value" / Int8ul),
+            0x00000001: "testitem2" / Struct("value" / Int32sl),
+        }),
+        )
+
+    data = b"\x01\x08\x00\x08\x20\x08"
+    d = T.parse(data)
+
+    xml = T.toET(d, name="Test", is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+    assert(str == """<Test><Int8 value="8" /><testitem2 value="136316928" /></Test>""")
+
+    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    rebuild = T.build(xml_rebuild)
+    assert(rebuild == data)

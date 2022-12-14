@@ -4,7 +4,7 @@ import sys
 from cons_utils import *
 
 
-def compress_ndfbin(data):
+def compress_ndfbin(data, update_header=False):
     header = Struct(
         "magic" / Magic(b"EUG0"),
         "magic2" / Int32ul,
@@ -19,11 +19,17 @@ def compress_ndfbin(data):
         "uncompressedSize" / Int32ul,
         )
     parsed_ndfbin = header.parse(data)
-    parsed_ndfbin.compressed = "compressed"
-    parsed_ndfbin.uncompressedSize = len(data) - 40
-    compressed_data = compress_zlib(data[40:], wbits=15)
 
-    return header.build(parsed_ndfbin) + compressed_data
+    if update_header:
+        parsed_ndfbin.compressed = "compressed"
+
+    if parsed_ndfbin.compressed == "compressed":
+        parsed_ndfbin.uncompressedSize = len(data) - 40
+        compressed_data = compress_zlib(data[40:], wbits=15)
+
+        return header.build(parsed_ndfbin) + compressed_data
+    else:
+        return data
 
 
 if __name__ == "__main__":

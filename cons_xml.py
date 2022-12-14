@@ -257,10 +257,15 @@ StringEncoded.fromET = StringEncoded_fromET
 def IfThenElse_toET(self, context, name=None, parent=None, is_root=False):
     assert (context is not None)
 
-    if(self.elsesubcon.__class__.__name__ != "Pass"):
+    if(self.elsesubcon.__class__.__name__ == "Pass"):
+        pass
+    elif(self.elsesubcon.__class__.__name__ == "Renamed"):
         assert(self.thensubcon.__class__.__name__ == "Renamed")
-        assert(self.elsesubcon.__class__.__name__ == "Renamed")
         assert(self.thensubcon.name != self.elsesubcon.name)
+    elif(self.elsesubcon.__class__.__name__ == "Array"):
+        assert(self.elsesubcon.count == 0)
+    else:
+        assert(0)
 
     c = evaluate(self.condfunc, context)
     if c:
@@ -270,22 +275,34 @@ def IfThenElse_toET(self, context, name=None, parent=None, is_root=False):
 
 
 def IfThenElse_fromET(self, parent, name, offset=0, is_root=False):
-    elem = parent.attrib.get(name, None)
-
-    if elem is None:
+    def get_elem(name):
         elem = parent.findall(name)
         if len(elem) == 1:
             elem = elem[0]
         elif len(elem) == 0:
             elem = None
+        return elem
 
-    if isinstance(self.elsesubcon, Array):
-        assert(self.elsesubcon.count == 0)
-    elif self.elsesubcon.__class__.__name__ == "Pass":
-        pass
-    else:
-        assert(0)
+    elem = parent.attrib.get(name, None)
+    # normal -> ident via name
+    if elem is None:
+        elem = get_elem(name)
+    # ident via renamed
+    if elem is None:
+        if self.thensubcon.__class__.__name__ == "Renamed":
+            elem = get_elem(self.thensubcon.name)
+    if elem is None:
+        if self.elsesubcon.__class__.__name__ == "Renamed":
+            elem = get_elem(self.elsesubcon.name)
 
+    if elem is None:
+        if self.thensubcon.__class__.__name__ == "Array":
+            elem = get_elem(self.thensubcon.subcon.name)
+    if elem is None:
+        if self.elsesubcon.__class__.__name__ == "Array":
+            elem = get_elem(self.elsesubcon.subcon.name)
+
+    # Pass
     if elem is None:
         return self.elsesubcon.fromET(parent=parent, name=name, offset=offset)
 
@@ -304,10 +321,15 @@ def Switch_toET(self, context, name=None, parent=None, is_root=False):
 
 def Switch_fromET(self, parent, name, offset=0, is_root=False):
     for case_id, case in self.cases.items():
-        elems = parent.findall(case.name)
+        if parent.tag == case.name:
+            elems = [parent]
+        else:
+            elems = parent.findall(case.name)
         assert(len(elems) in [0,1])
         if len(elems) == 1:
-            return case.fromET(parent=parent, name=case.name, offset=offset)
+            elem, size, extra = case.fromET(parent=parent, name=case.name, offset=offset)
+            extra = extra | {f"_switchid_{name}": case_id}
+            return elem, size, extra
     # not found
     assert(0)
 
@@ -412,8 +434,6 @@ def GenericList_fromET(self, parent, name, offset=0, is_root=False):
             elems = row
             assert(ass == 0)
             ass = 1
-    else:
-        assert(0)
 
     size = 0
     ret = []

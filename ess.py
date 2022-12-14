@@ -15,8 +15,7 @@ from construct import *
 Ess = Struct(
     # FIXME: is this really a version number or maybe something else?
     "version" / Const(b"\x01\x00\x02\x02"),
-    # apparently always 0 or 1
-    "unk" / Enum(Int8ul, false=0, true=1),
+    "isShort" / Enum(Int8ul, false=0, true=1),
     "channels" / Int8ul,
     "samplerate" / Int16ul,
     "frameCount" / Int32ub,

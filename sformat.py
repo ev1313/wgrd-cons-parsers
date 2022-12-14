@@ -23,7 +23,6 @@ SFormat = Struct(
     "sformatLength" / Int32ul,
     "sformatUnk2" / Int32ul,
     "frameCount2" / Int32ul,
-    Probe(),
     "data" / If(lambda ctx: ctx.isShort == "false",
                Struct(
                    "unkCount" / Int32ul,

@@ -9,7 +9,7 @@ if __name__ == "__main__":
     essfile = open(sys.argv[1], "rb")
     essdata = essfile.read()
 
-    ess_header = EssHeader.parse(essdata)
+    ess_header = Ess.parse(essdata)
 
     sformat = Container(
               isShort="true",

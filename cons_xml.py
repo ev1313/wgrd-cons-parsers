@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
 import pdb
-from io import BytesIO
+
+# used for building / parsing string arrays
+from io import StringIO
+import csv
+
 import xml.etree.ElementTree as ET
 from construct import *
 
@@ -23,7 +27,8 @@ def create_context(context, name, list_index=None, is_root=False):
         ctx = Container(_=context, **data)
     elif isinstance(data, ListContainer):
         assert (list_index is not None)
-        ctx = Container(_=context)
+        # construct does not add an additional _ layer for arrays
+        ctx = Container(**context)
         ctx._index = list_index
         ctx[f"{name}_{list_index}"] = data[list_index]
     else:
@@ -40,15 +45,25 @@ def get_from_context(context, name):
     else:
         return context[name]
 
+def rename_in_context(context, name, new_name):
+    ctx = context
+    idx = context.get("_index", None)
+    if idx is not None:
+        ctx[f"{new_name}_{idx}"] = context[f"{name}_{idx}"]
+        ctx[f"{name}_{idx}"] = None
+    else:
+        ctx[new_name] = context[name]
+        ctx[name] = None
+
+    return ctx
+
 def Renamed_toET(self, context, name=None, parent=None, is_root=False):
+    ctx = context
     # corner case with Switch e.g.
     if name != self.name:
-        ctx = context
-        ctx[self.name] = context[name]
-        ctx[name] = None
-    else:
-        ctx = context
-    return self.subcon.toET(context=context, name=self.name, parent=parent, is_root=is_root)
+        ctx = rename_in_context(context=context, name=name, new_name=self.name)
+
+    return self.subcon.toET(context=ctx, name=self.name, parent=parent, is_root=is_root)
 
 
 def Renamed_fromET(self, parent, name, offset=0, is_root=False):
@@ -112,21 +127,23 @@ Struct.fromET = Struct_fromET
 
 
 def FormatField_toET(self, context, name=None, parent=None, is_root=False):
-    if name is None:
-        assert (0)
+    assert(name is not None)
+    data = str(get_from_context(context, name))
+
     if parent is None:
-        parent = ET.Element(name)
+        return data
 
-        parent.attrib[name] = str(get_from_context(context, name))
-
-        return parent
-
-    parent.attrib[name] = str(get_from_context(context, name))
+    parent.attrib[name] = data
     return None
 
 
 def FormatField_fromET(self, parent, name, offset=0, is_root=False):
-    elem = parent.attrib[name]
+    if isinstance(parent, ET.Element):
+        elem = parent.attrib[name]
+    elif isinstance(parent, str):
+        elem = parent
+    else:
+        assert(0)
 
     assert (len(self.fmtstr) == 2)
     if self.fmtstr[1] in ["B", "H", "L", "Q", "b", "h", "l", "q"]:
@@ -185,19 +202,20 @@ Bytes.fromET = Bytes_fromET
 
 
 def StringEncoded_toET(self, context, name=None, parent=None, is_root=False):
-    if name is None:
-        assert (0)
+    assert(name is not None)
+    data = get_from_context(context, name)
     if parent is None:
-        parent = ET.Element(name)
+        return data
 
-    parent.attrib[name] = context[name]
-    if parent is None:
-        return parent
+    parent.attrib[name] = data
     return None
 
 
 def StringEncoded_fromET(self, parent, name, offset=0, is_root=False):
-    elem = parent.attrib[name]
+    if isinstance(parent, str):
+        elem = parent
+    else:
+        elem = parent.attrib[name]
     if self.encoding == ["ascii", "utf-8"]:
         size = len(elem)
     elif self.encoding in ["utf-16-le", "utf-16-be", "utf-16"]:
@@ -263,11 +281,13 @@ def Switch_toET(self, context, name=None, parent=None, is_root=False):
 
 
 def Switch_fromET(self, parent, name, offset=0, is_root=False):
-    elem = parent.attrib[name]
-
-    for case in self.cases:
-        if case.name == elem.tag:
-            return case.fromET(parent=elem, name=name, offset=offset)
+    for case_id, case in self.cases.items():
+        elems = parent.findall(case.name)
+        assert(len(elems) in [0,1])
+        if len(elems) == 1:
+            return case.fromET(parent=parent, name=case.name, offset=offset)
+    # not found
+    assert(0)
 
 
 Switch.toET = Switch_toET
@@ -324,23 +344,55 @@ def GenericList_toET(self, context, name=None, parent=None, is_root=False):
     assert(name is not None)
     assert(parent is not None)
     i = 0
+    lst = []
     for item in data:
         ctx = create_context(context, name, list_index=i)
         it = self.subcon.toET(context=ctx, name=name, parent=None)
-        if it is not None:
+        assert(it is not None)
+
+        if isinstance(it, str):
+            # generate list
+            assert(len(lst) == i)
+            lst.append(it)
+        elif isinstance(it, ET.Element):
+            assert(len(lst) == 0)
             parent.append(it)
         else:
             assert(0)
+
         i += 1
+
+    if len(lst) > 0:
+        elem = ET.Element(name)
+        output = StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(lst)
+        elem.text = output.getvalue().strip()
+        parent.append(elem)
 
     return None
 
 
 def GenericList_fromET(self, parent, name, offset=0, is_root=False):
-    if self.subcon.name is not None:
-        name = self.subcon.name
-
     elems = parent.findall(name)
+    # probably structs
+    if len(elems) == 0:
+        assert(self.subcon.name is not None)
+        name = self.subcon.name
+        elems = parent.findall(name)
+        assert(len(elems) != 0)
+
+    # containing array with all basic elements
+    elif len(elems) == 1:
+        elem = elems[0]
+        ass = 0
+        for row in csv.reader([elem.text]):
+            elems = row
+            assert(ass == 0)
+            ass = 1
+    else:
+        assert(0)
+
     size = 0
     ret = []
     idx = 0

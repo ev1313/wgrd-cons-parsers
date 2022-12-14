@@ -96,10 +96,29 @@ def test_xml_rebuild():
     assert(size == len(data))
     assert(data == rebuild)
 
+def test_xml_string_array():
+    T = Struct(
+        "foo" / Enum(Int8ul, true=1, false=0),
+        "entries" / Array(4, PaddedString(2, "utf-16-le")),
+        )
+
+    data = b"\x01\x65\x00\x66\x00\x67\x00\x68\x00"
+    d = T.parse(data)
+
+    xml = T.toET(d, name="Test", is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+    assert(str == """<Test foo="true"><entries>e,f,g,h</entries></Test>""")
+
+    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    rebuild = T.build(xml_rebuild)
+
+    assert(size == len(data))
+    assert(data == rebuild)
+
 def test_xml_array():
     T = Struct(
         "foo" / Enum(Int8ul, true=1, false=0),
-        "test" / Array(6, "int" / Int8ul),
+        "entries" / Array(6, "int" / Int8ul),
         )
 
     data = b"\x01\x02\x00\x65\x00\x66\x00"
@@ -107,7 +126,7 @@ def test_xml_array():
 
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
-    assert(str == """<Test foo="true"><int int="2" /><int int="0" /><int int="101" /><int int="0" /><int int="102" /><int int="0" /></Test>""")
+    assert(str == """<Test foo="true"><entries>2,0,101,0,102,0</entries></Test>""")
 
     xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
     rebuild = T.build(xml_rebuild)
@@ -127,7 +146,7 @@ def test_xml_rebuild_array():
 
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
-    assert(str == """<Test foo="true"><int int="2" /><int int="0" /><int int="101" /><int int="0" /><int int="102" /><int int="0" /></Test>""")
+    assert(str == """<Test foo="true"><test>2,0,101,0,102,0</test></Test>""")
 
     xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
     rebuild = T.build(xml_rebuild)
@@ -150,7 +169,7 @@ def test_xml_rebuild_repeatuntil():
 
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
-    assert(str == """<Test foo="true" bar="true" baz="false"><int int="2" /><int int="3" /><int int="4" /><int int="5" /><int int="6" /><int int="0" /></Test>""")
+    assert(str == """<Test foo="true" bar="true" baz="false"><test>2,3,4,5,6,0</test></Test>""")
 
     xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
 
@@ -225,3 +244,28 @@ def test_xml_lazybound():
     xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
     rebuild = T.build(xml_rebuild)
     assert(rebuild == data)
+
+def test_xml_switch():
+    T = Struct(
+        "foo" / Int8ul,
+        "baz" / Switch(this.foo, {
+            0x00000001: "Int8" / Struct("value" / Int8ul),
+            0x00000002: "Int32" / Struct("value" / Int32sl),
+        }),
+        "asd" / Switch(this.foo, {
+            0x00000002: "testitem1" / Struct("value" / Int8ul),
+            0x00000001: "testitem2" / Struct("value" / Int32sl),
+        }),
+    )
+
+    data = b"\x01\x08\x00\x08\x20\x08"
+    d = T.parse(data)
+
+    xml = T.toET(d, name="Test", is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+    assert(str == """<Test foo="1"><Int8 value="8" /><testitem2 value="136316928" /></Test>""")
+
+    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    rebuild = T.build(xml_rebuild)
+    assert(rebuild == data)
+

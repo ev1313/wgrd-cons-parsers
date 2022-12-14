@@ -200,6 +200,28 @@ def Bytes_fromET(self, parent, name, offset=0, is_root=False):
 Bytes.toET = Bytes_toET
 Bytes.fromET = Bytes_fromET
 
+def GreedyBytes_toET(context, name=None, parent=None, is_root=False):
+    if name is None:
+        assert (0)
+    if parent is None:
+        parent = ET.Element(name)
+
+    assert(isinstance(context[name], bytes))
+    parent.attrib[name] = context[name].hex()
+    if parent is None:
+        return parent
+    return None
+
+
+def GreedyBytes_fromET(parent, name, offset=0, is_root=False):
+    elem = parent.attrib[name]
+    b = b"".fromhex(elem)
+    return b, len(b), {}
+
+
+GreedyBytes.toET = GreedyBytes_toET
+GreedyBytes.fromET = GreedyBytes_fromET
+
 
 def StringEncoded_toET(self, context, name=None, parent=None, is_root=False):
     assert(name is not None)

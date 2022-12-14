@@ -4,14 +4,15 @@ import pdb
 
 import os
 import sys
-from io import BytesIO
+import pathlib
+import argparse
 
 from cons_utils import *
 from cons_xml import *
 
 from construct import *
 
-EssHeader = Struct(
+Ess = Struct(
     # FIXME: is this really a version number or maybe something else?
     "version" / Const(b"\x01\x00\x02\x02"),
     # apparently always 0 or 1
@@ -23,19 +24,41 @@ EssHeader = Struct(
     "samplecount2" / Int32ub,
     "sampleoffsets" / RepeatUntil(lambda obj,lst,ctx: obj == 0, Int32ub),
     "padding" / Const(b"\x00"*16),
+    "framedata" / GreedyBytes,
 )
 
 if __name__ == "__main__":
-    f = open(sys.argv[1], "rb")
-    data = f.read()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--pack", action="store_true")
+    parser.add_argument("inputs", type=pathlib.Path, nargs='+', help="path to the input directory (pack) or file (unpack)")
+    parser.add_argument("-o", "--output", type=pathlib.Path, default="./out/", help="path to the output directory (unpack) / file (pack)")
+    args = parser.parse_args()
 
-    header = EssHeader.parse(data)
-    print(header)
+    for input in args.inputs:
+        f = open(sys.argv[1], "rb")
+        data = f.read()
+        f.close()
 
-    frames = []
-    old = 0
-    for offset in header["sampleoffsets"]:
-        frame = data[old:offset]
-        frames.append(frame)
-        old = offset
-        print(frame)
+        if not args.pack:
+            sys.stderr.write("parsing ess...\n")
+            ess = Ess.parse(data)
+            sys.stderr.write("generating xml...\n")
+            xml = Ess.toET(ess, name="Ess", is_root=True)
+            sys.stderr.write("indenting xml...\n")
+            ET.indent(xml, space="  ", level=0)
+            str = ET.tostring(xml).decode("utf-8")
+            sys.stderr.write("writing xml...\n")
+            f = open(os.path.join(args.output, f"{os.path.basename(input)}.xml"), "wb")
+            f.write(str.encode("utf-8"))
+            f.close()
+        else:
+            assert(str(input).endswith(".ess.xml"))
+            xml = ET.fromstring(data.decode("utf-8"))
+            sys.stderr.write("rebuilding from xml...\n")
+            xml_rebuild, size, _ = Ess.fromET(xml, "Dic", is_root=True)
+            sys.stderr.write("building ess...\n")
+            rebuilt_data = Ess.build(xml_rebuild)
+            sys.stderr.write("writing ess...\n")
+            f = open(os.path.join(args.output, f"{os.path.basename(str(input)[:-4])}"), "wb")
+            f.write(rebuilt_data)
+            f.close()

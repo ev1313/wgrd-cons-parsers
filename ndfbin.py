@@ -67,12 +67,12 @@ NDFType = Struct(
     )
 
 NDFProperty = Struct(
-    "propertyIndex" / Rebuild(Int32ul, lambda ctx: ctx._index),
+    "propertyIndex" / Int32ul,
     "Type" / If(lambda ctx: ctx.propertyIndex != 0xABABABAB, NDFType),
     )
 
 NDFObject = Struct(
-    "classIndex" / Rebuild(Int32ul, lambda ctx: ctx._index),
+    "classIndex" / Int32ul,
     "properties" / RepeatUntil(lambda obj, lst, ctx: obj.propertyIndex == 0xABABABAB, "Property" / NDFProperty),
     )
 

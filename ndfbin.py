@@ -251,7 +251,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for input in args.inputs:
-        f = open(sys.argv[1], "rb")
+        f = open(input, "rb")
         data = f.read()
         f.close()
 

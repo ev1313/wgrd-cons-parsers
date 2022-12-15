@@ -45,6 +45,7 @@ def get_from_context(context, name):
     else:
         return context[name]
 
+
 def rename_in_context(context, name, new_name):
     ctx = context
     idx = context.get("_index", None)
@@ -56,6 +57,7 @@ def rename_in_context(context, name, new_name):
         ctx[name] = None
 
     return ctx
+
 
 def Renamed_toET(self, context, name=None, parent=None, is_root=False):
     ctx = context
@@ -86,7 +88,6 @@ def Struct_toET(self, context, name=None, parent=None, is_root=False):
         if sc.name is None or sc.name.startswith("_"):
             continue
 
-
         child = sc.toET(context=ctx, name=sc.name, parent=elem)
         if child is not None:
             elem.append(child)
@@ -101,7 +102,7 @@ def Struct_fromET(self, parent, name, offset=0, is_root=False):
             elem = elem[0]
     else:
         elem = parent
-        assert(parent.tag == name)
+        assert (parent.tag == name)
 
     ret = Container()
     size = 0
@@ -126,8 +127,20 @@ Struct.toET = Struct_toET
 Struct.fromET = Struct_fromET
 
 
+def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
+    assert (0)
+
+
+def FocusedSeq_fromET(self, parent, name, offset=0, is_root=False):
+    assert (0)
+
+
+FocusedSeq.toET = FocusedSeq_toET
+FocusedSeq.fromET = FocusedSeq_fromET
+
+
 def FormatField_toET(self, context, name=None, parent=None, is_root=False):
-    assert(name is not None)
+    assert (name is not None)
     data = str(get_from_context(context, name))
 
     if parent is None:
@@ -143,7 +156,7 @@ def FormatField_fromET(self, parent, name, offset=0, is_root=False):
     elif isinstance(parent, str):
         elem = parent
     else:
-        assert(0)
+        assert (0)
 
     assert (len(self.fmtstr) == 2)
     if self.fmtstr[1] in ["B", "H", "L", "Q", "b", "h", "l", "q"]:
@@ -178,13 +191,14 @@ def Enum_fromET(self, parent, name, offset=0, is_root=False):
 Enum.toET = Enum_toET
 Enum.fromET = Enum_fromET
 
+
 def Bytes_toET(self, context, name=None, parent=None, is_root=False):
     if name is None:
         assert (0)
     if parent is None:
         parent = ET.Element(name)
 
-    assert(isinstance(context[name], bytes))
+    assert (isinstance(context[name], bytes))
     parent.attrib[name] = context[name].hex()
     if parent is None:
         return parent
@@ -200,13 +214,14 @@ def Bytes_fromET(self, parent, name, offset=0, is_root=False):
 Bytes.toET = Bytes_toET
 Bytes.fromET = Bytes_fromET
 
+
 def GreedyBytes_toET(context, name=None, parent=None, is_root=False):
     if name is None:
         assert (0)
     if parent is None:
         parent = ET.Element(name)
 
-    assert(isinstance(context[name], bytes))
+    assert (isinstance(context[name], bytes))
     parent.attrib[name] = context[name].hex()
     if parent is None:
         return parent
@@ -224,7 +239,7 @@ GreedyBytes.fromET = GreedyBytes_fromET
 
 
 def StringEncoded_toET(self, context, name=None, parent=None, is_root=False):
-    assert(name is not None)
+    assert (name is not None)
     data = get_from_context(context, name)
     if parent is None:
         return data
@@ -241,11 +256,11 @@ def StringEncoded_fromET(self, parent, name, offset=0, is_root=False):
     if self.encoding == ["ascii", "utf-8"]:
         size = len(elem)
     elif self.encoding in ["utf-16-le", "utf-16-be", "utf-16"]:
-        size = len(elem)*2
+        size = len(elem) * 2
     elif self.encoding in ["utf-32"]:
-        size = len(elem)*4
+        size = len(elem) * 4
     else:
-        assert(0)
+        assert (0)
 
     return elem, size, {}
 
@@ -257,15 +272,15 @@ StringEncoded.fromET = StringEncoded_fromET
 def IfThenElse_toET(self, context, name=None, parent=None, is_root=False):
     assert (context is not None)
 
-    if(self.elsesubcon.__class__.__name__ == "Pass"):
+    if (self.elsesubcon.__class__.__name__ == "Pass"):
         pass
-    elif(self.elsesubcon.__class__.__name__ == "Renamed"):
-        assert(self.thensubcon.__class__.__name__ == "Renamed")
-        assert(self.thensubcon.name != self.elsesubcon.name)
-    elif(self.elsesubcon.__class__.__name__ == "Array"):
-        assert(self.elsesubcon.count == 0)
+    elif (self.elsesubcon.__class__.__name__ == "Renamed"):
+        assert (self.thensubcon.__class__.__name__ == "Renamed")
+        assert (self.thensubcon.name != self.elsesubcon.name)
+    elif (self.elsesubcon.__class__.__name__ == "Array"):
+        assert (self.elsesubcon.count == 0)
     else:
-        assert(0)
+        assert (0)
 
     c = evaluate(self.condfunc, context)
     if c:
@@ -325,13 +340,13 @@ def Switch_fromET(self, parent, name, offset=0, is_root=False):
             elems = [parent]
         else:
             elems = parent.findall(case.name)
-        assert(len(elems) in [0,1])
+        assert (len(elems) in [0, 1])
         if len(elems) == 1:
             elem, size, extra = case.fromET(parent=parent, name=case.name, offset=offset)
             extra = extra | {f"_switchid_{name}": case_id}
             return elem, size, extra
     # not found
-    assert(0)
+    assert (0)
 
 
 Switch.toET = Switch_toET
@@ -352,6 +367,7 @@ Rebuild.toET = Ignore_toET
 Rebuild.fromET = Ignore_fromET
 Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
+
 
 def IgnoreCls_toET(context, name=None, parent=None, is_root=False):
     # does not need to be in the XML (will be rebuilt)
@@ -375,34 +391,35 @@ def Pointer_toET(self, context, name=None, parent=None, is_root=False):
 
 def Pointer_fromET(self, parent, name, offset=0, is_root=False):
     elem, size, extra = self.subcon.fromET(parent=parent, name=name, offset=0, is_root=is_root)
-    assert(len(extra) == 0)
+    assert (len(extra) == 0)
     return elem, 0, {f"_ptrsize_{name}": size}
 
 
 Pointer.toET = Pointer_toET
 Pointer.fromET = Pointer_fromET
 
+
 def GenericList_toET(self, context, name=None, parent=None, is_root=False):
     data = get_from_context(context, name)
     assert (isinstance(data, ListContainer))
-    assert(name is not None)
-    assert(parent is not None)
+    assert (name is not None)
+    assert (parent is not None)
     i = 0
     lst = []
     for item in data:
         ctx = create_context(context, name, list_index=i)
         it = self.subcon.toET(context=ctx, name=name, parent=None)
-        assert(it is not None)
+        assert (it is not None)
 
         if isinstance(it, str):
             # generate list
-            assert(len(lst) == i)
+            assert (len(lst) == i)
             lst.append(it)
         elif isinstance(it, ET.Element):
-            assert(len(lst) == 0)
+            assert (len(lst) == 0)
             parent.append(it)
         else:
-            assert(0)
+            assert (0)
 
         i += 1
 
@@ -421,10 +438,10 @@ def GenericList_fromET(self, parent, name, offset=0, is_root=False):
     elems = parent.findall(name)
     # probably structs
     if len(elems) == 0:
-        assert(self.subcon.name is not None)
+        assert (self.subcon.name is not None)
         name = self.subcon.name
         elems = parent.findall(name)
-        assert(len(elems) != 0)
+        assert (len(elems) != 0)
 
     # containing array with all basic elements
     elif len(elems) == 1:
@@ -432,7 +449,7 @@ def GenericList_fromET(self, parent, name, offset=0, is_root=False):
         ass = 0
         for row in csv.reader([elem.text]):
             elems = row
-            assert(ass == 0)
+            assert (ass == 0)
             ass = 1
 
     size = 0
@@ -441,7 +458,7 @@ def GenericList_fromET(self, parent, name, offset=0, is_root=False):
     ret_extra = {}
     for x in elems:
         elem, csize, extra = self.subcon.fromET(parent=x, name=name, offset=offset, is_root=True)
-        assert(len(extra) == 0)
+        assert (len(extra) == 0)
         ret.append(elem)
         ret_extra[f"_offset_{name}_{idx}"] = offset
         ret_extra[f"_size_{name}_{idx}"] = csize

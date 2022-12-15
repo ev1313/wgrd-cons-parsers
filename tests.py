@@ -154,6 +154,25 @@ def test_xml_rebuild_array():
     assert(size == len(data))
     assert(data == rebuild)
 
+def test_xml_rebuild_prefixed_array():
+    T = Struct(
+        "foo" / Enum(Int8ul, true=1, false=0),
+        "test" / PrefixedArray(Int16ul, "int" / Int8ul),
+        )
+
+    data = b"\x01\x06\x00\x02\x00\x65\x00\x66\x00"
+    d = T.parse(data)
+
+    xml = T.toET(d, name="Test", is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+    assert(str == """<Test foo="true"><test>2,0,101,0,102,0</test></Test>""")
+
+    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    rebuild = T.build(xml_rebuild)
+
+    assert(size == len(data))
+    assert(data == rebuild)
+
 
 def test_xml_rebuild_repeatuntil():
     T = Struct(

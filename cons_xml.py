@@ -131,11 +131,31 @@ def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
     assert(isinstance(self.parsebuildfrom, str))
     for sc in self.subcons:
         if sc.name == self.parsebuildfrom:
+            # FocusedSeq has to ignore the Rename
+            # because e.g. PrefixedArray adds custom names
+            if sc.__class__.__name__ == "Renamed":
+                sc = sc.subcon
+            else:
+                assert(0)
             return sc.toET(context=context, name=name, parent=parent)
     assert(0)
 
 
 def FocusedSeq_fromET(self, parent, name, offset=0, is_root=False):
+    size = 0
+    s = None
+    for sc in self.subcons:
+        # update offset / sizes
+        sc._sizeof({}, "")
+        if sc.name == self.parsebuildfrom:
+            if sc.__class__.__name__ == "Renamed":
+                s = sc.subcon
+            else:
+                assert(0)
+    assert(s is not None)
+
+    elem, size, extra = s.fromET(parent=parent, name=name, offset=offset, is_root=False)
+
     assert (0)
 
 

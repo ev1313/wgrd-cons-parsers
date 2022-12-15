@@ -157,7 +157,7 @@ def test_xml_rebuild_array():
 def test_xml_rebuild_prefixed_array():
     T = Struct(
         "foo" / Enum(Int8ul, true=1, false=0),
-        "test" / PrefixedArray(Int16ul, "int" / Int8ul),
+        "test" / PrefixedArray(Int16ul, Int8ul),
         )
 
     data = b"\x01\x06\x00\x02\x00\x65\x00\x66\x00"

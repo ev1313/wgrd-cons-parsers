@@ -32,7 +32,7 @@ NDFType = Struct(
         0x0000000E: "S32_vec3" / Struct("x" / Int32sl, "y" / Int32sl, "z" / Int32sl),
         0x0000000F: "Matrix" / Array(16, Float32l),
         0x00000011: "List" / Struct("count" / Rebuild(Int32ul, len_(this.listitem)),
-                                    "listitem" / Array(this.count, LazyBound(lambda: NDFType)),
+                                    "list" / Array(this.count, "ListItem" / LazyBound(lambda: NDFType)),
                                     ),
         0x00000012: "Map" / Struct(
             "count" / Rebuild(Int32ul, len_(this.mapitem)),
@@ -68,12 +68,12 @@ NDFType = Struct(
 
 NDFProperty = Struct(
     "propertyIndex" / Rebuild(Int32ul, lambda ctx: ctx._index),
-    "value" / If(lambda ctx: ctx.propertyIndex != 0xABABABAB, NDFType),
+    "Type" / If(lambda ctx: ctx.propertyIndex != 0xABABABAB, NDFType),
     )
 
 NDFObject = Struct(
     "classIndex" / Rebuild(Int32ul, lambda ctx: ctx._index),
-    "properties" / RepeatUntil(lambda obj, lst, ctx: obj.propertyIndex == 0xABABABAB, NDFProperty),
+    "properties" / RepeatUntil(lambda obj, lst, ctx: obj.propertyIndex == 0xABABABAB, "Property" / NDFProperty),
     )
 
 # generic table
@@ -94,7 +94,7 @@ OBJETable = Struct(
     "pad1" / Const(b"\x00"*4),
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_objects),
     "pad2" / Const(b"\x00"*4),
-    "objects" / readArea(NDFObject),
+    "objects" / readArea("Object" / NDFObject),
 )
 
 # second table

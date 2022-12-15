@@ -128,7 +128,11 @@ Struct.fromET = Struct_fromET
 
 
 def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
-    assert (0)
+    assert(isinstance(self.parsebuildfrom, str))
+    for sc in self.subcons:
+        if sc.name == self.parsebuildfrom:
+            return sc.toET(context=context, name=name, parent=parent)
+    assert(0)
 
 
 def FocusedSeq_fromET(self, parent, name, offset=0, is_root=False):

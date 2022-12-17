@@ -14,14 +14,14 @@ def evaluate(param, context):
     return param(context) if callable(param) else param
 
 
-def create_context(context, name, list_index=None, is_root=False):
+def create_child_context(context, name, list_index=None, is_root=False):
     if not is_root:
         assert (context is not None)
         assert (name is not None)
     else:
         return context
 
-    data = get_from_context(context, name)
+    data = get_current_field(context, name)
 
     if isinstance(data, Container):
         ctx = Container(_=context, **data)
@@ -38,7 +38,7 @@ def create_context(context, name, list_index=None, is_root=False):
     return ctx
 
 
-def get_from_context(context, name):
+def get_current_field(context, name):
     idx = context.get("_index", None)
     if idx is not None:
         return context[f"{name}_{idx}"]
@@ -68,8 +68,8 @@ def Renamed_toET(self, context, name=None, parent=None, is_root=False):
     return self.subcon.toET(context=ctx, name=self.name, parent=parent, is_root=is_root)
 
 
-def Renamed_fromET(self, parent, name, offset=0, is_root=False):
-    return self.subcon.fromET(parent=parent, name=self.name, offset=offset, is_root=is_root)
+def Renamed_fromET(self, context, parent, name, offset=0, is_root=False):
+    return self.subcon.fromET(context=context, parent=parent, name=self.name, offset=offset, is_root=is_root)
 
 
 Renamed.toET = Renamed_toET
@@ -77,7 +77,7 @@ Renamed.fromET = Renamed_fromET
 
 
 def Struct_toET(self, context, name=None, parent=None, is_root=False):
-    ctx = create_context(context, name, is_root=is_root)
+    ctx = create_child_context(context, name, is_root=is_root)
 
     if name is None:
         name = "Struct"
@@ -95,32 +95,35 @@ def Struct_toET(self, context, name=None, parent=None, is_root=False):
     return elem
 
 
-def Struct_fromET(self, parent, name, offset=0, is_root=False):
+def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
+    # we go down one layer
+    ctx = Container()
+    ctx["_"] = context
+
+    # get the xml element
     if not is_root:
         elem = parent.findall(name)
         if len(elem) == 1:
             elem = elem[0]
+        assert(len(elem) == 1)
     else:
         elem = parent
         assert (parent.tag == name)
 
-    ret = Container()
     size = 0
-    ret["_offset"] = offset
+    ctx["_offset"] = offset
 
     for sc in self.subcons:
-        data, child_size, extra = sc.fromET(parent=elem, name=sc.name, offset=offset)
+        ctx, child_size = sc.fromET(context=ctx, parent=elem, name=sc.name, offset=offset)
         size += child_size
-        ret[sc.name] = data
-        ret[f"_offset_{sc.name}"] = offset
-        ret[f"_size_{sc.name}"] = child_size
+        ctx[f"_offset_{sc.name}"] = offset
+        ctx[f"_size_{sc.name}"] = child_size
         offset += child_size
-        ret[f"_endoffset_{sc.name}"] = offset
-        ret = ret | extra
+        ctx[f"_endoffset_{sc.name}"] = offset
 
-    ret["_size"] = size
+    ctx["_size"] = size
 
-    return ret, size, {}
+    return ctx, size
 
 
 Struct.toET = Struct_toET
@@ -141,20 +144,25 @@ def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
     assert(0)
 
 
-def FocusedSeq_fromET(self, parent, name, offset=0, is_root=False):
+def FocusedSeq_fromET(self, context, parent, name, offset=0, is_root=False):
+    ctx = {"_": context}
     size = 0
+    ctx["_offset"] = offset
+
     s = None
     for sc in self.subcons:
-        # update offset / sizes
-        sc._sizeof({}, "")
+        size += s.sizeof()
         if sc.name == self.parsebuildfrom:
-            if sc.__class__.__name__ == "Renamed":
-                s = sc.subcon
-            else:
-                assert(0)
+            assert(sc.__class__.__name__ == "Renamed")
+            s = sc.subcon
+            ctx, childsize = s.fromET(context=ctx, parent=parent, name=name, offset=offset, is_root=False)
+            size += childsize
+
     assert(s is not None)
 
-    elem, size, extra = s.fromET(parent=parent, name=name, offset=offset, is_root=False)
+    ctx["_size"] = size
+
+    return ctx, size+4
 
     assert (0)
 
@@ -165,7 +173,7 @@ FocusedSeq.fromET = FocusedSeq_fromET
 
 def FormatField_toET(self, context, name=None, parent=None, is_root=False):
     assert (name is not None)
-    data = str(get_from_context(context, name))
+    data = str(get_current_field(context, name))
 
     if parent is None:
         return data
@@ -264,7 +272,7 @@ GreedyBytes.fromET = GreedyBytes_fromET
 
 def StringEncoded_toET(self, context, name=None, parent=None, is_root=False):
     assert (name is not None)
-    data = get_from_context(context, name)
+    data = get_current_field(context, name)
     if parent is None:
         return data
 
@@ -424,14 +432,14 @@ Pointer.fromET = Pointer_fromET
 
 
 def GenericList_toET(self, context, name=None, parent=None, is_root=False):
-    data = get_from_context(context, name)
+    data = get_current_field(context, name)
     assert (isinstance(data, ListContainer))
     assert (name is not None)
     assert (parent is not None)
     i = 0
     lst = []
     for item in data:
-        ctx = create_context(context, name, list_index=i)
+        ctx = create_child_context(context, name, list_index=i)
         it = self.subcon.toET(context=ctx, name=name, parent=None)
         assert (it is not None)
 
@@ -466,7 +474,8 @@ def GenericList_fromET(self, parent, name, offset=0, is_root=False):
         name = self.subcon.name
         elems = parent.findall(name)
         assert (len(elems) != 0)
-
+    elif len(elems) == 1 and isinstance(elems[0], ET.Element):
+        pass
     # containing array with all basic elements
     elif len(elems) == 1:
         elem = elems[0]
@@ -508,7 +517,7 @@ def LazyBound_toET(self, context, name=None, parent=None, is_root=False):
 
 def LazyBound_fromET(self, parent, name, offset=0, is_root=False):
     sc = self.subconfunc()
-    return sc.fromET(parent=parent, name=name, offset=offset)
+    return sc.fromET(parent=parent, name=name, offset=offset, is_root=True)
 
 
 LazyBound.toET = LazyBound_toET

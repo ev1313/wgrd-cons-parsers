@@ -57,7 +57,7 @@ class ZLibCompressed(Tunnel):
     def toET(self, context, name=None, parent=None):
         elem = ET.Element("Compressed")
         pdb.set_trace()
-        ctx = create_context(context, "Compressed")
+        ctx = create_child_context(context, "Compressed")
         child = self.subcon.toET(context=ctx, name=name, parent=elem)
         if child is not None:
             elem.append(child)

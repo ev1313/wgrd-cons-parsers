@@ -25,20 +25,29 @@ NDFType = Struct(
         0x00000006: "Float64" / Struct("value" / Float64l),
         0x00000007: "StringReference" / Struct("stringIndex" / Int32ul),
         0x00000008: "WideString" / Struct("str" / PascalString(Int32ul, "utf-16")),
-        0x00000009: "Reference" / LazyBound(lambda: NDFType),
+        0x00000009: "Reference" / Struct(
+            "typeId" / Rebuild(Int32ul, this._switchid_ref),
+            "ref" / Switch(this.typeId, {
+                0xAAAAAAAA: "TranReference" / Struct("tranIndex" / Int32ul),
+                0xBBBBBBBB: "ObjectReference" / Struct(
+                    "objectIndex" / Int32ul,
+                    "classIndex" / Int32ul,
+                    ),
+            }),
+        ),
         0x0000000B: "F32_vec3" / Struct("x" / Float32l, "y" / Float32l, "z" / Float32l),
         0x0000000C: "F32_vec4" / Struct("x" / Float32l, "y" / Float32l, "z" / Float32l, "w" / Float32l),
         0x0000000D: "Color" / Struct("r" / Int8ul, "g" / Int8ul, "b" / Int8ul, "a" / Int8ul),
         0x0000000E: "S32_vec3" / Struct("x" / Int32sl, "y" / Int32sl, "z" / Int32sl),
-        0x0000000F: "Matrix" / Array(16, Float32l),
-        0x00000011: "List" / PrefixedArray(Int32ul, "ListItem" / LazyBound(lambda: NDFType)),
+        0x0000000F: "Matrix" / Struct("Matrix" / Array(16, Float32l)),
+        0x00000011: "List" / PrefixedArray(Int32ul, LazyBound(lambda: "List" / NDFType)),
         0x00000012: "Map" / Struct(
             "count" / Rebuild(Int32ul, len_(this.mapitem)),
             "mapitem" / Struct(
                 "key" / LazyBound(lambda: NDFType),
                 "value" / LazyBound(lambda: NDFType),
                 )[this.count]),
-        0x00000013: "Long" / Int64ul,
+        0x00000013: "Long" / Struct("Long" / Int64ul),
         0x00000014: "Blob" / Struct(
             "_size" / Int32ul,
             "data" / Bytes(this._size),
@@ -55,18 +64,12 @@ NDFType = Struct(
         0x0000001F: "S32_vec2" / Struct("x" / Int32sl, "y" / Int32sl),
         0x00000021: "F32_vec2" / Struct("x" / Float32l, "y" / Float32l),
         0x00000025: "Hash" / Struct("hash" / Bytes(16)),
-        #FIXME: The following are probably part of 0x00000009 (Reference)
-        0xAAAAAAAA: "TranReference" / Int32ul,
-        0xBBBBBBBB: "ObjectReference" / Struct(
-            "objectIndex" / Int32ul,
-            "classIndex" / Int32ul,
-            ),
     }, default=Error),
     )
 
 NDFProperty = Struct(
     "propertyIndex" / Int32ul,
-    "Type" / If(lambda ctx: ctx.propertyIndex != 0xABABABAB, NDFType),
+    "Type" / If(lambda ctx: ctx.propertyIndex != 0xABABABAB, "ndf" / NDFType),
     )
 
 NDFObject = Struct(

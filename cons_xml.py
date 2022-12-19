@@ -23,15 +23,17 @@ def create_child_context(context, name, list_index=None, is_root=False):
 
     data = get_current_field(context, name)
 
-    if isinstance(data, Container):
+    if isinstance(data, Container) or isinstance(data, dict):
         ctx = Container(_=context, **data)
-    elif isinstance(data, ListContainer):
+    elif isinstance(data, ListContainer) or isinstance(data, list):
         assert (list_index is not None)
         # construct does not add an additional _ layer for arrays
         ctx = Container(**context)
         ctx._index = list_index
         ctx[f"{name}_{list_index}"] = data[list_index]
     else:
+        # this is needed when the item is part of a list
+        # then the name is e.g. "bar_1"
         ctx = Container(_=context)
         ctx[name] = data
 

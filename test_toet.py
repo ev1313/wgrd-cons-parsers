@@ -26,11 +26,15 @@ def test_renamed_1():
 def test_create_child_context():
     ctx = {"bar": {"foo": 1, "bar": 3, "baz": 5}, "foobar": 5}
     child_ctx = create_child_context(context=ctx, name="bar")
-    print(child_ctx)
     assert(child_ctx["_"]["foobar"] == 5)
-    assert(child_ctx["bar"]["foo"] == 1)
-    assert(child_ctx["bar"]["bar"] == 3)
-    assert(child_ctx["bar"]["baz"] == 5)
+    assert(child_ctx["foo"] == 1)
+    assert(child_ctx["bar"] == 3)
+    assert(child_ctx["baz"] == 5)
+
+    ctx = {"bar": ["foo", "bar", "baz"], "foobar": 5}
+    child_ctx = create_child_context(context=ctx, name="bar", list_index=0)
+    assert(child_ctx["_index"] == 0)
+    assert(child_ctx["bar_0"] == "foo")
 
 def test_struct_formatfields():
     T = Struct(
@@ -42,3 +46,28 @@ def test_struct_formatfields():
     child = T.toET(context=ctx, name="teststruct", parent=None)
     assert(child.attrib["a"] == "5")
     assert(child.attrib["b"] == "4.6")
+
+def test_struct_renamed():
+    T = "newname" / Struct(
+        "a" / Int32ul,
+        "b" / Float32l,
+        )
+
+    ctx = {"teststruct": {"a": 5, "b": 4.6}}
+    child = T.toET(context=ctx, name="teststruct", parent=None)
+    assert(child.attrib["a"] == "5")
+    assert(child.attrib["b"] == "4.6")
+
+def test_struct_nested():
+    T = Struct("foo" / Int32ul,
+               "newname" / Struct(
+                    "a" / Int32ul,
+                    "b" / Float32l,
+                ),
+               "bar" / Int32ul,
+        )
+
+    ctx = {"teststruct": {"foo": 1, "newname": {"a": 5, "b": 4.6}, "bar": 45}}
+    child = T.toET(context=ctx, name="teststruct", parent=None)
+    assert(child.find("newname").attrib["a"] == "5")
+    assert(child.find("newname").attrib["b"] == "4.6")

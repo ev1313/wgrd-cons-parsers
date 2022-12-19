@@ -105,7 +105,6 @@ def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
         elem = parent.findall(name)
         if len(elem) == 1:
             elem = elem[0]
-        assert(len(elem) == 1)
     else:
         elem = parent
         assert (parent.tag == name)
@@ -122,6 +121,7 @@ def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
         ctx[f"_endoffset_{sc.name}"] = offset
 
     ctx["_size"] = size
+    ctx["_endoffset"] = offset
 
     return ctx, size
 
@@ -182,19 +182,22 @@ def FormatField_toET(self, context, name=None, parent=None, is_root=False):
     return None
 
 
-def FormatField_fromET(self, parent, name, offset=0, is_root=False):
+def FormatField_fromET(self, context, parent, name, offset=0, is_root=False):
     if isinstance(parent, ET.Element):
         elem = parent.attrib[name]
     elif isinstance(parent, str):
         elem = parent
+        assert(0)
     else:
         assert (0)
 
     assert (len(self.fmtstr) == 2)
     if self.fmtstr[1] in ["B", "H", "L", "Q", "b", "h", "l", "q"]:
-        return int(elem), self.length, {}
+        context[name] = int(elem)
+        return context, self.length
     elif self.fmtstr[1] in ["e", "f", "d"]:
-        return float(elem), self.length, {}
+        context[name] = float(elem)
+        return context, self.length
 
     assert (0)
 
@@ -208,7 +211,7 @@ def Enum_toET(self, context, name=None, parent=None, is_root=False):
     return self.subcon.toET(context, name=name, parent=parent)
 
 
-def Enum_fromET(self, parent, name, offset=0, is_root=False):
+def Enum_fromET(self, context, parent, name, offset=0, is_root=False):
     # FIXME: only works for FormatFields
     elem = parent.attrib[name]
 
@@ -217,7 +220,8 @@ def Enum_fromET(self, parent, name, offset=0, is_root=False):
     if mapping is None:
         return self.subcon.fromET(parent=parent, offset=offset, name=name)
     else:
-        return elem, self.subcon.length, {}
+        context[name] = elem
+        return context, self.subcon.length
 
 
 Enum.toET = Enum_toET
@@ -237,7 +241,7 @@ def Bytes_toET(self, context, name=None, parent=None, is_root=False):
     return None
 
 
-def Bytes_fromET(self, parent, name, offset=0, is_root=False):
+def Bytes_fromET(self, context, parent, name, offset=0, is_root=False):
     elem = parent.attrib[name]
     b = b"".fromhex(elem)
     return b, len(b), {}
@@ -260,10 +264,11 @@ def GreedyBytes_toET(context, name=None, parent=None, is_root=False):
     return None
 
 
-def GreedyBytes_fromET(parent, name, offset=0, is_root=False):
+def GreedyBytes_fromET(context, parent, name, offset=0, is_root=False):
     elem = parent.attrib[name]
     b = b"".fromhex(elem)
-    return b, len(b), {}
+    context[name] = b
+    return context, len(b)
 
 
 GreedyBytes.toET = GreedyBytes_toET
@@ -280,9 +285,10 @@ def StringEncoded_toET(self, context, name=None, parent=None, is_root=False):
     return None
 
 
-def StringEncoded_fromET(self, parent, name, offset=0, is_root=False):
+def StringEncoded_fromET(self, context, parent, name, offset=0, is_root=False):
     if isinstance(parent, str):
         elem = parent
+        assert(0)
     else:
         elem = parent.attrib[name]
     if self.encoding == ["ascii", "utf-8"]:
@@ -294,7 +300,8 @@ def StringEncoded_fromET(self, parent, name, offset=0, is_root=False):
     else:
         assert (0)
 
-    return elem, size, {}
+    context[name] = elem
+    return context, size
 
 
 StringEncoded.toET = StringEncoded_toET
@@ -321,7 +328,7 @@ def IfThenElse_toET(self, context, name=None, parent=None, is_root=False):
         return self.elsesubcon.toET(context=context, name=name, parent=parent)
 
 
-def IfThenElse_fromET(self, parent, name, offset=0, is_root=False):
+def IfThenElse_fromET(self, context, parent, name, offset=0, is_root=False):
     def get_elem(name):
         elem = parent.findall(name)
         if len(elem) == 1:

@@ -71,3 +71,5 @@ def test_struct_nested():
     child = T.toET(context=ctx, name="teststruct", parent=None)
     assert(child.find("newname").attrib["a"] == "5")
     assert(child.find("newname").attrib["b"] == "4.6")
+    str = ET.tostring(child).decode("utf-8")
+    assert(str == """<teststruct foo="1" bar="45"><newname a="5" b="4.6" /></teststruct>""")

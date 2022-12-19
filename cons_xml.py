@@ -6,6 +6,8 @@ import pdb
 from io import StringIO
 import csv
 
+from copy import deepcopy
+
 import xml.etree.ElementTree as ET
 from construct import *
 
@@ -125,7 +127,14 @@ def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
     ctx["_size"] = size
     ctx["_endoffset"] = offset
 
-    return ctx, size
+    # now we have to go back up
+    if not is_root:
+        ret_ctx = context
+        ret_ctx[name] = ctx
+    else:
+        ret_ctx = context | ctx
+
+    return ret_ctx, size
 
 
 Struct.toET = Struct_toET

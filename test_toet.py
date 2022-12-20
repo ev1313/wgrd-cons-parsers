@@ -157,7 +157,7 @@ def test_array_nested_struct():
                )
 
     parent = ET.Element("parent")
-    ctx = {"foo": 1, "arr": [{"x": 1, "y": 1}, {"x": 2, "y": 2}], "bar": 2}
+    ctx = {"testarr": {"foo": 1, "arr": [{"x": 1, "y": 1}, {"x": 2, "y": 2}], "bar": 2}}
     child = T.toET(context=ctx, name="testarr", parent=parent)
     items = child.findall("NamedTest")
     assert (len(items) == 2)
@@ -179,3 +179,35 @@ def test_const_struct():
     assert (child.attrib.get("bar", None) is None)
     assert (child.attrib.get("baz", None) is None)
     assert (child.attrib["foo"] == "1")
+
+def test_ifthenelse():
+    T = If(this.foo == 1, "foo" / Struct("x"/ Int32ul))
+
+    parent = ET.Element("parent")
+    ctx = {"foo": 1, "test": {"x": 42}}
+    child = T.toET(context=ctx, parent=parent, name="test")
+    assert(child.tag == "foo")
+    assert(child.attrib["x"] == "42")
+
+    ctx = {"foo": 2, "test": {"x": 42}}
+    child = T.toET(context=ctx, parent=parent, name="test")
+    assert(child is None)
+
+def test_ifthenelse_in_struct():
+    T = Struct("foo" / Int32ul,
+               "bar" / IfThenElse(this.foo == 1, "bar_foostruct" / Struct("x" / Int32ul), "bar_barstruct" / Struct("y" / Int16ul)),
+               "bar2" / IfThenElse(this.foo == 0, "bar2_foostruct" / Struct("x" / Int32ul), "bar2_barstruct" / Struct("y" / Int16ul)),
+               "baz" / Int32ul,
+    )
+    parent = ET.Element("parent")
+    ctx = {"teststruct": {"foo": 1, "bar": {"x": 1}, "bar2": {"y": 2}, "baz": 4}}
+    child = T.toET(context=ctx, name="teststruct", parent=parent)
+    assert (child.attrib["foo"] == "1")
+    assert (child.attrib["baz"] == "4")
+    bar = child.findall("bar_foostruct")
+    assert(len(bar) == 1)
+    assert(bar[0].attrib["x"] == "1")
+    bar2 = child.findall("bar2_barstruct")
+    assert(len(bar2) == 1)
+    assert(bar2[0].attrib["y"] == "2")
+

@@ -311,7 +311,6 @@ def StringEncoded_toET(self, context, name=None, parent=None, is_root=False):
 def StringEncoded_fromET(self, context, parent, name, offset=0, is_root=False):
     if isinstance(parent, str):
         elem = parent
-        assert(0)
     else:
         elem = parent.attrib[name]
     if self.encoding == ["ascii", "utf-8"]:
@@ -323,8 +322,8 @@ def StringEncoded_fromET(self, context, parent, name, offset=0, is_root=False):
     else:
         assert (0)
 
-    context[name] = elem
-    return context, size
+    ctx = insert_or_append_field(context, name, elem)
+    return ctx, size
 
 
 StringEncoded.toET = StringEncoded_toET
@@ -368,9 +367,18 @@ def IfThenElse_fromET(self, context, parent, name, offset=0, is_root=False):
     if elem is None:
         if self.thensubcon.__class__.__name__ == "Renamed":
             elem = get_elem(self.thensubcon.name)
+        if elem is not None:
+            ctx, size = self.thensubcon.fromET(context=context, parent=parent, name=name, offset=offset)
+            ctx = rename_in_context(ctx, self.thensubcon.name, name)
+            return ctx, size
+
     if elem is None:
         if self.elsesubcon.__class__.__name__ == "Renamed":
             elem = get_elem(self.elsesubcon.name)
+        if elem is not None:
+            ctx, size = self.elsesubcon.fromET(context=context, parent=parent, name=name, offset=offset)
+            ctx = rename_in_context(ctx, self.elsesubcon.name, name)
+            return ctx, size
 
     if elem is None:
         if self.thensubcon.__class__.__name__ == "Array":
@@ -381,9 +389,9 @@ def IfThenElse_fromET(self, context, parent, name, offset=0, is_root=False):
 
     # Pass
     if elem is None:
-        return self.elsesubcon.fromET(parent=parent, name=name, offset=offset)
+        return self.elsesubcon.fromET(context=context, parent=parent, name=name, offset=offset)
 
-    return self.thensubcon.fromET(parent=parent, name=name, offset=offset)
+    return self.thensubcon.fromET(context=context, parent=parent, name=name, offset=offset)
 
 
 IfThenElse.toET = IfThenElse_toET

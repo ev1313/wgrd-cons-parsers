@@ -166,3 +166,23 @@ def test_array_struct():
     assert (ctx["teststruct"]["_offset"] == 12)
     assert (ctx["teststruct"]["_endoffset"] == size + 12)
     assert (ctx["teststruct"]["arr"] == [1, 2, 3, 4])
+
+
+def test_ifthenelse():
+    T = If(this.foo == 1, "foo" / Struct("x"/ Int32ul))
+
+    parent = ET.Element("parent")
+    child = ET.Element("foo")
+    child.attrib["x"] = 34
+    parent.append(child)
+
+    ctx = {"test": "foobarbaz"}
+    ctx, size = T.fromET(context=ctx, parent=parent, name="testname", offset=12)
+    assert(ctx["test"] == "foobarbaz")
+    assert(size == 4)
+    assert(ctx["testname"]["_offset"] == 12)
+    assert(ctx["testname"]["_size"] == 4)
+    assert(ctx["testname"]["_endoffset"] == 16)
+    assert(ctx["testname"]["x"] == 34)
+
+    T = If(this.foo == 1, "testval" / Int32ul)

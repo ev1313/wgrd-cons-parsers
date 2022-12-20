@@ -25,8 +25,8 @@ def test_xml_simple():
     str = ET.tostring(xml).decode("utf-8")
     assert(str == """<Test bar="16946" baz="16946" asd="2" />""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
 
     assert(data == rebuild)
     assert(size == 9)
@@ -46,8 +46,8 @@ def test_xml_enum():
     str = ET.tostring(xml).decode("utf-8")
     assert(str == """<Test foo="true" bar="16946" baz="bar" asd="2" />""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
 
     assert(data == rebuild)
     assert(size == 9)
@@ -68,8 +68,8 @@ def test_xml_ifthenelse():
     str = ET.tostring(xml).decode("utf-8")
     assert(str == """<Test foo="true" bar="3" baz="bar" asd="2" />""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
 
     assert(size == 9)
     assert(data == rebuild)
@@ -90,8 +90,8 @@ def test_xml_rebuild():
     str = ET.tostring(xml).decode("utf-8")
     assert(str == """<Test foo="true"><str data="ef" /></Test>""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
 
     assert(size == len(data))
     assert(data == rebuild)
@@ -109,8 +109,8 @@ def test_xml_string_array():
     str = ET.tostring(xml).decode("utf-8")
     assert(str == """<Test foo="true"><entries>e,f,g,h</entries></Test>""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
 
     assert(size == len(data))
     assert(data == rebuild)
@@ -128,8 +128,8 @@ def test_xml_array():
     str = ET.tostring(xml).decode("utf-8")
     assert(str == """<Test foo="true"><entries>2,0,101,0,102,0</entries></Test>""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
 
     assert(size == len(data))
     assert(data == rebuild)

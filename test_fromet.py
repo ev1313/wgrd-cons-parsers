@@ -16,12 +16,13 @@ def test_formatfield_1():
 
 
 def test_renamed_1():
-    T = "test" / Int32ul,
-    ctx = {}
+    T = "test" / Int32ul
+    ctx = {"teststuff": "someparentstuff"}
     parent = ET.Element("parent")
     parent.attrib["test"] = 4
-    ctx, size = T[0].fromET(context=ctx, parent=parent, name="foo")
+    ctx, size = T.fromET(context=ctx, parent=parent, name="foo")
     assert(size == 4)
+    assert(ctx["teststuff"] == "someparentstuff")
     assert(ctx["test"] == 4)
 
     pass
@@ -42,6 +43,7 @@ def test_struct_formatfields():
 
     ctx, size = T.fromET(context=ctx, parent=parent, name="teststruct", offset=56)
     assert(size == 8)
+    assert(ctx["test"] == "someparentstuff")
     assert(ctx["teststruct"]["a"] == 3)
     assert(ctx["teststruct"]["b"] == 4.6)
     assert(ctx["teststruct"]["_offset"] == 56)
@@ -63,7 +65,7 @@ def test_struct_root():
 
     ctx, size = T.fromET(context=ctx, parent=struct, name="teststruct", offset=56, is_root=True)
     assert(size == 8)
-    print(ctx)
+    assert(ctx["test"] == "someparentstuff")
     assert(ctx["a"] == 3)
     assert(ctx["b"] == 4.6)
     assert(ctx["_offset"] == 56)
@@ -96,9 +98,19 @@ def test_struct_nested():
 
     ctx, size = T.fromET(context=ctx, parent=parent, name="teststruct", offset=56)
     assert(size == 16)
+    assert(ctx["test"] == "someparentstuff")
     assert(ctx["teststruct"]["newname"]["a"] == 3)
     assert(ctx["teststruct"]["newname"]["b"] == 4.6)
     assert(ctx["teststruct"]["_offset"] == 56)
     assert(ctx["teststruct"]["_size"] == 16)
     assert(ctx["teststruct"]["_endoffset"] == 72)
     assert(ctx["teststruct"]["_"]["test"] == "someparentstuff")
+
+def test_array_formatfields():
+    T = Array(4, Int32ul)
+
+    parent = ET.Element("testarray")
+    ctx = {"test": "someparentstuff"}
+    ctx, size = T.fromET(context=ctx, parent=parent, name="testarray", offset=12)
+    assert(size == 16)
+    assert(ctx["test"] == "someparentstuff")

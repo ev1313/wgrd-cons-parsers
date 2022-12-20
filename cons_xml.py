@@ -229,7 +229,7 @@ def Enum_fromET(self, context, parent, name, offset=0, is_root=False):
     mapping = self.encmapping.get(elem, None)
 
     if mapping is None:
-        return self.subcon.fromET(parent=parent, offset=offset, name=name)
+        return self.subcon.fromET(context=context, parent=parent, offset=offset, name=name)
     else:
         context[name] = elem
         return context, self.subcon.length
@@ -408,9 +408,9 @@ def Ignore_toET(self, context, name=None, parent=None, is_root=False):
     return None
 
 
-def Ignore_fromET(self, parent, name, offset=0, is_root=False):
-    # not required in dict, as it will be rebuilt, but size is required
-    return None, self.subcon.length, {}
+def Ignore_fromET(self, context, parent, name, offset=0, is_root=False):
+    # will be rebuilt, but size is required
+    return context, self.subcon.length
 
 
 Rebuild.toET = Ignore_toET
@@ -424,9 +424,9 @@ def IgnoreCls_toET(context, name=None, parent=None, is_root=False):
     return None
 
 
-def IgnoreCls_fromET(parent, name, offset=0, is_root=False):
+def IgnoreCls_fromET(context, parent, name, offset=0, is_root=False):
     # not required in dict, as it will be rebuilt
-    return None, 0, {}
+    return context, 0
 
 
 Tell.toET = IgnoreCls_toET
@@ -451,7 +451,7 @@ Pointer.fromET = Pointer_fromET
 
 def GenericList_toET(self, context, name=None, parent=None, is_root=False):
     data = get_current_field(context, name)
-    assert (isinstance(data, ListContainer))
+    assert (isinstance(data, ListContainer) or isinstance(data, list))
     assert (name is not None)
     assert (parent is not None)
     i = 0
@@ -484,7 +484,7 @@ def GenericList_toET(self, context, name=None, parent=None, is_root=False):
     return None
 
 
-def GenericList_fromET(self, parent, name, offset=0, is_root=False):
+def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
     elems = parent.findall(name)
     # probably structs
     if len(elems) == 0:

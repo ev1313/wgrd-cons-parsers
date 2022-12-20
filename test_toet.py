@@ -6,20 +6,20 @@ from cons_xml import *
 from cons_utils import *
 
 def test_formatfield_1():
-    T = Int32ul,
+    T = Int32ul
 
     ctx = {"foo": 5}
     parent = ET.Element("parent")
-    child = T[0].toET(context=ctx, name="foo", parent=parent)
+    child = T.toET(context=ctx, name="foo", parent=parent)
     assert(child is None)
     assert(parent.attrib["foo"] == "5")
 
 def test_renamed_1():
-    T = "test" / Int32ul,
+    T = "test" / Int32ul
 
     ctx = {"foo": 5}
     parent = ET.Element("parent")
-    child = T[0].toET(context=ctx, name="foo", parent=parent)
+    child = T.toET(context=ctx, name="foo", parent=parent)
     assert(child is None)
     assert(parent.attrib["test"] == "5")
 
@@ -73,3 +73,14 @@ def test_struct_nested():
     assert(child.find("newname").attrib["b"] == "4.6")
     str = ET.tostring(child).decode("utf-8")
     assert(str == """<teststruct foo="1" bar="45"><newname a="5" b="4.6" /></teststruct>""")
+
+def test_array_formatfields():
+    T = Array(4, Int32ul)
+
+    parent=ET.Element("test")
+    ctx = {"testarray": [1,2,3,4]}
+    child = T.toET(context=ctx, name="testarray", parent=parent)
+    assert(child is None)
+    items = parent.findall("testarray")
+    assert(len(items) == 1)
+    assert(items[0].text == "1,2,3,4")

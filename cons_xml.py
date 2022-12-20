@@ -49,6 +49,19 @@ def get_current_field(context, name):
     else:
         return context[name]
 
+def insert_or_append_field(context, name, value):
+    current = context.get(name, None)
+    if current is None:
+        context[name] = value
+    elif isinstance(current, ListContainer) or isinstance(current, list):
+        context[name].append(value)
+    else:
+        print(context)
+        print(name)
+        print(current)
+        assert(0)
+    return context
+
 
 def rename_in_context(context, name, new_name):
     ctx = context
@@ -198,16 +211,15 @@ def FormatField_fromET(self, context, parent, name, offset=0, is_root=False):
         elem = parent.attrib[name]
     elif isinstance(parent, str):
         elem = parent
-        assert(0)
     else:
         assert (0)
 
     assert (len(self.fmtstr) == 2)
     if self.fmtstr[1] in ["B", "H", "L", "Q", "b", "h", "l", "q"]:
-        context[name] = int(elem)
+        insert_or_append_field(context, name, int(elem))
         return context, self.length
     elif self.fmtstr[1] in ["e", "f", "d"]:
-        context[name] = float(elem)
+        insert_or_append_field(context, name, float(elem))
         return context, self.length
 
     assert (0)
@@ -485,18 +497,26 @@ def GenericList_toET(self, context, name=None, parent=None, is_root=False):
 
 
 def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
-    elems = parent.findall(name)
-    # probably structs
-    if len(elems) == 0:
-        assert (self.subcon.name is not None)
-        name = self.subcon.name
-        elems = parent.findall(name)
-        assert (len(elems) != 0)
-    elif len(elems) == 1 and isinstance(elems[0], ET.Element):
-        pass
-    # containing array with all basic elements
-    elif len(elems) == 1:
-        elem = elems[0]
+    sc = self.subcon
+    scname = self.subcon.name
+    # check if the parent contains children of the subcon name
+    if scname is not None:
+        elems = parent.findall(scname)
+        if len(elems) == 0:
+            elems = None
+    else:
+        elems = None
+
+    # if there is no element with the subcon name
+    # this works, because with simple FormatFields the subcon name is ignored
+    # we probably have an array with only basic elements, stored in the main node
+    if elems is None:
+        # we have to correct the subcon, in case of rename
+        if isinstance(sc, Renamed):
+            sc = sc.subcon
+
+        elem = parent.findall(name)[0]
+        assert(elem is not None)
         ass = 0
         for row in csv.reader([elem.text]):
             elems = row
@@ -504,21 +524,19 @@ def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
             ass = 1
 
     size = 0
-    ret = []
+    ret = context
+    ret[name] = []
     idx = 0
-    ret_extra = {}
     for x in elems:
-        elem, csize, extra = self.subcon.fromET(parent=x, name=name, offset=offset, is_root=True)
-        assert (len(extra) == 0)
-        ret.append(elem)
-        ret_extra[f"_offset_{name}_{idx}"] = offset
-        ret_extra[f"_size_{name}_{idx}"] = csize
+        ret, csize = sc.fromET(context=ret, parent=x, name=name, offset=offset, is_root=True)
+        ret[f"_offset_{name}_{idx}"] = offset
+        ret[f"_size_{name}_{idx}"] = csize
         size += csize
-        ret_extra[f"_cursize_{name}_{idx}"] = size
+        ret[f"_cursize_{name}_{idx}"] = size
         offset += csize
-        ret_extra[f"_endoffset_{name}_{idx}"] = offset
+        ret[f"_endoffset_{name}_{idx}"] = offset
         idx += 1
-    return ret, size, ret_extra
+    return ret, size
 
 
 Array.toET = GenericList_toET

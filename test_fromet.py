@@ -201,3 +201,15 @@ def test_ifthenelse():
     assert(ctx["testname"]["_size"] == 10)
     assert(ctx["testname"]["_endoffset"] == 22)
 
+def test_focuseseq():
+    T = FocusedSeq("foo", "one" / Rebuild(Int32ul, this.foo), "foo" / Int32ul, "two" / Rebuild(Int32ul, this.foo))
+
+    parent = ET.Element("parent")
+    parent.attrib["foo"] = "5"
+    ctx = {"test": "foobarbaz"}
+    ctx, size = T.fromET(context=ctx, parent=parent, name="foo", offset=13)
+    print(ctx)
+    print(size)
+    assert(size == 12)
+    assert(ctx["test"] == "foobarbaz")
+    assert(ctx["foo"] == 5)

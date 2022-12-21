@@ -145,7 +145,8 @@ def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
     ctx["_endoffset"] = offset
 
     # remove _, because construct rebuild will fail otherwise
-    ctx.pop("_")
+    if "_" in ctx.keys():
+        ctx.pop("_")
 
     # now we have to go back up
     if not is_root:
@@ -176,26 +177,32 @@ def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
 
 
 def FocusedSeq_fromET(self, context, parent, name, offset=0, is_root=False):
-    ctx = {"_": context}
+    ctx = Container()
+    ctx["_"] = context
     size = 0
     ctx["_offset"] = offset
 
     s = None
     for sc in self.subcons:
-        size += s.sizeof()
         if sc.name == self.parsebuildfrom:
             assert(sc.__class__.__name__ == "Renamed")
             s = sc.subcon
             ctx, childsize = s.fromET(context=ctx, parent=parent, name=name, offset=offset, is_root=False)
             size += childsize
+        else:
+            size += sc._sizeof(context=context, path="")
 
     assert(s is not None)
 
     ctx["_size"] = size
 
-    return ctx, size+4
+    # construct fails, when _ already exists in context
+    if "_" in ctx.keys():
+        ctx.pop("_")
 
-    assert (0)
+    ret_ctx = context | ctx
+
+    return ret_ctx, size
 
 
 FocusedSeq.toET = FocusedSeq_toET

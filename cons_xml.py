@@ -144,6 +144,9 @@ def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
     ctx["_size"] = size
     ctx["_endoffset"] = offset
 
+    # remove _, because construct rebuild will fail otherwise
+    ctx.pop("_")
+
     # now we have to go back up
     if not is_root:
         ret_ctx = context
@@ -463,10 +466,12 @@ def Pointer_toET(self, context, name=None, parent=None, is_root=False):
     return self.subcon.toET(context=context, name=name, parent=parent)
 
 
-def Pointer_fromET(self, parent, name, offset=0, is_root=False):
-    elem, size, extra = self.subcon.fromET(parent=parent, name=name, offset=0, is_root=is_root)
-    assert (len(extra) == 0)
-    return elem, 0, {f"_ptrsize_{name}": size}
+def Pointer_fromET(self, context, parent, name, offset=0, is_root=False):
+    ctx, size = self.subcon.fromET(context=context, parent=parent, name=name, offset=0, is_root=is_root)
+    if isinstance(self.subcon, Renamed):
+        ctx = rename_in_context(ctx, self.subcon.name, name)
+    ctx[f"_ptrsize_{name}"] = size
+    return ctx, 0
 
 
 Pointer.toET = Pointer_toET

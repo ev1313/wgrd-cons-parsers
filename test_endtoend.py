@@ -149,8 +149,8 @@ def test_xml_rebuild_array():
     str = ET.tostring(xml).decode("utf-8")
     assert(str == """<Test foo="true"><test>2,0,101,0,102,0</test></Test>""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
 
     assert(size == len(data))
     assert(data == rebuild)
@@ -168,8 +168,8 @@ def test_xml_rebuild_prefixed_array():
     str = ET.tostring(xml).decode("utf-8")
     assert(str == """<Test foo="true"><test>2,0,101,0,102,0</test></Test>""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
 
     assert(size == len(data))
     assert(data == rebuild)
@@ -213,20 +213,23 @@ def test_xml_pointer():
             "a2" / Int8ul,
         ))
         )
-
-    data = b"\x01\x08\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08"
+    #        foo  offset   size     padding   test
+    data = b"\x01\x08\x00\x00\x00\x00\x00\x00\x04\x05"
     d = T.parse(data)
+    print(d)
 
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    print(ctx)
+    rebuild = T.build(ctx)
 
-    assert(xml_rebuild["_offset_test"] == 5)
-    assert(xml_rebuild["test"]["_offset_a1"] == 0)
-    assert(xml_rebuild["test"]["_offset_a2"] == 1)
-    assert(xml_rebuild["_ptrsize_test"] == 2)
+    assert(ctx["_offset_test"] == 5)
+    assert(ctx["test"]["_offset_a1"] == 0)
+    assert(ctx["test"]["_offset_a2"] == 1)
+    assert(ctx["_ptrsize_test"] == 2)
+    assert(rebuild == data)
 
 def test_xml_if_array():
     T = Struct(
@@ -238,11 +241,11 @@ def test_xml_if_array():
     data = b"\x01\x08\x00\x08"
     d = T.parse(data)
 
-    xml = T.toET(d, name="Test", is_root=True)
+    xml = T.toET(context=d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
     assert(rebuild == data)
 
 def test_xml_array_array_if_unnamed():

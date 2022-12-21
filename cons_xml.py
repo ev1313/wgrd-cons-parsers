@@ -411,7 +411,7 @@ def Switch_toET(self, context, name=None, parent=None, is_root=False):
     return case.toET(context, name=name, parent=parent)
 
 
-def Switch_fromET(self, parent, name, offset=0, is_root=False):
+def Switch_fromET(self, context, parent, name, offset=0, is_root=False):
     for case_id, case in self.cases.items():
         if parent.tag == case.name:
             elems = [parent]
@@ -419,9 +419,13 @@ def Switch_fromET(self, parent, name, offset=0, is_root=False):
             elems = parent.findall(case.name)
         assert (len(elems) in [0, 1])
         if len(elems) == 1:
-            elem, size, extra = case.fromET(parent=parent, name=case.name, offset=offset)
-            extra = extra | {f"_switchid_{name}": case_id}
-            return elem, size, extra
+            ctx, size = case.fromET(context=context, parent=parent, name=case.name, offset=offset)
+
+            if isinstance(case, Renamed):
+                ctx = rename_in_context(ctx, case.name, name)
+
+            ctx[f"_switchid_{name}"] = case_id
+            return ctx, size
     # not found
     assert (0)
 

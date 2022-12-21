@@ -56,7 +56,6 @@ def test_struct_formatfields():
     assert (ctx["teststruct"]["_offset"] == 56)
     assert (ctx["teststruct"]["_size"] == 8)
     assert (ctx["teststruct"]["_endoffset"] == 64)
-    assert (ctx["teststruct"]["_"]["test"] == "someparentstuff")
 
 
 def test_struct_root():
@@ -79,7 +78,6 @@ def test_struct_root():
     assert (ctx["_offset"] == 56)
     assert (ctx["_size"] == 8)
     assert (ctx["_endoffset"] == 64)
-    assert (ctx["_"]["test"] == "someparentstuff")
 
 
 def test_struct_nested():
@@ -113,7 +111,6 @@ def test_struct_nested():
     assert (ctx["teststruct"]["_offset"] == 56)
     assert (ctx["teststruct"]["_size"] == 16)
     assert (ctx["teststruct"]["_endoffset"] == 72)
-    assert (ctx["teststruct"]["_"]["test"] == "someparentstuff")
 
 
 def test_array_formatfields():

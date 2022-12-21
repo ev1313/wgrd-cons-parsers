@@ -222,3 +222,12 @@ def test_ifthenelse_in_struct():
     assert (child.attrib["foo"] == "1")
     assert (child.attrib["ui32"] == "23")
     assert (child.attrib["baz"] == "4")
+
+def test_focusedseq():
+    T = FocusedSeq("foo", "one" / Rebuild(Int32ul, this.foo), "foo" / Int32ul, "two" / Rebuild(Int32ul, this.foo))
+
+    parent = ET.Element("parent")
+    ctx = {"test": 5}
+    child = T.toET(context=ctx, name="test", parent=parent)
+    assert(child is None)
+    assert(parent.attrib["test"] == "5")

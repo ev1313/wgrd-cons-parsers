@@ -63,7 +63,6 @@ def test_xml_ifthenelse():
 
     data = b"\x01\x03\x00\x42\x32\x02\x00\x00\x00"
     d = T.parse(data)
-    print(d)
 
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
@@ -174,6 +173,25 @@ def test_xml_rebuild_prefixed_array():
     assert(size == len(data))
     assert(data == rebuild)
 
+def test_xml_rebuild_focusedseq():
+    T = Struct("asd" /
+               FocusedSeq("foo",
+                          "one" / Rebuild(Int8ul, this.foo),
+                          "foo" / Int8ul,
+                          "two" / Rebuild(Int8ul, this.foo)
+                          )
+               )
+
+    data = b"\x01\x01\x01"
+    ctx = T.parse(data)
+    print(ctx)
+
+    parent = ET.Element("parent")
+    xml = T.toET(context=ctx, name="test", parent=parent)
+    str = ET.tostring(xml).decode("utf-8")
+    print(str)
+
+    assert(0)
 
 def test_xml_rebuild_repeatuntil():
     T = Struct(
@@ -326,8 +344,8 @@ def test_xml_switch():
     str = ET.tostring(xml).decode("utf-8")
     assert(str == """<Test foo="1"><Int8 value="8" /><testitem2 value="136316928" /></Test>""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
     assert(rebuild == data)
 
 def test_xml_switch_nested():

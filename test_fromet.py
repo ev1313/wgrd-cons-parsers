@@ -173,7 +173,7 @@ def test_ifthenelse():
 
     parent = ET.Element("parent")
     child = ET.Element("foo")
-    child.attrib["x"] = 34
+    child.attrib["x"] = "34"
     parent.append(child)
 
     ctx = {"test": "foobarbaz"}
@@ -185,4 +185,22 @@ def test_ifthenelse():
     assert(ctx["testname"]["_endoffset"] == 16)
     assert(ctx["testname"]["x"] == 34)
 
-    T = If(this.foo == 1, "testval" / Int32ul)
+    T = Struct("foo" / Int32ul,
+               "ui32" / If(this.foo == 1, Int32ul),
+               "ui16" / If(this.foo == 0, Int16ul),
+               "baz" / Int32ul,
+               )
+    parent = ET.Element("parent")
+    child = ET.Element("testname")
+    child.attrib["foo"] = "1"
+    child.attrib["ui16"] = "32"
+    child.attrib["baz"] = "4"
+    parent.append(child)
+    ctx = {"test": "foobarbaz"}
+    ctx, size = T.fromET(context=ctx, parent=parent, name="testname", offset=12)
+    assert(ctx["test"] == "foobarbaz")
+    assert(size == 10)
+    assert(ctx["testname"]["_offset"] == 12)
+    assert(ctx["testname"]["_size"] == 10)
+    assert(ctx["testname"]["_endoffset"] == 22)
+

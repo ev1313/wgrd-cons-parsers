@@ -211,3 +211,14 @@ def test_ifthenelse_in_struct():
     assert(len(bar2) == 1)
     assert(bar2[0].attrib["y"] == "2")
 
+    T = Struct("foo" / Int32ul,
+               "ui32" / If(this.foo == 1, Int32ul),
+               "ui16" / If(this.foo == 0, Int16ul),
+               "baz" / Int32ul,
+               )
+    parent = ET.Element("parent")
+    ctx = {"teststruct": {"foo": 1, "ui32": 23, "baz": 4}}
+    child = T.toET(context=ctx, name="teststruct", parent=parent)
+    assert (child.attrib["foo"] == "1")
+    assert (child.attrib["ui32"] == "23")
+    assert (child.attrib["baz"] == "4")

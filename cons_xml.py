@@ -86,7 +86,11 @@ def Renamed_toET(self, context, name=None, parent=None, is_root=False):
 
 
 def Renamed_fromET(self, context, parent, name, offset=0, is_root=False):
-    return self.subcon.fromET(context=context, parent=parent, name=self.name, offset=offset, is_root=is_root)
+    ctx, size = self.subcon.fromET(context=context, parent=parent, name=self.name, offset=offset, is_root=is_root)
+    # construct requires this when rebuilding, else key error is raised
+    if not self.name in ctx.keys():
+        ctx[self.name] = None
+    return ctx, size
 
 
 Renamed.toET = Renamed_toET

@@ -63,6 +63,7 @@ def test_xml_ifthenelse():
 
     data = b"\x01\x03\x00\x42\x32\x02\x00\x00\x00"
     d = T.parse(data)
+    print(d)
 
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")

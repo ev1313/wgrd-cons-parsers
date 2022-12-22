@@ -198,10 +198,32 @@ def test_xml_rebuild_focusedseq():
 
     parent = ET.Element("parent")
     print(ctx)
-    xml = T.toET(context=ctx, name="test", parent=parent)
+    xml = T.toET(context=ctx, name="test", parent=parent, is_root=True)
     str = ET.tostring(xml).decode("utf-8")
+    print(str)
+    assert(xml.tag == "test")
+    assert(xml.attrib["asd"] == "1")
 
-    assert (0)
+
+def test_xml_rebuild_renamed_focusedseq():
+    T = "test" / Struct("asd" /
+               FocusedSeq("foo",
+                          "one" / Rebuild(Int8ul, this.foo),
+                          "foo" / Int8ul,
+                          "two" / Rebuild(Int8ul, this.foo)
+                          )
+               )
+
+    data = b"\x01\x01\x01"
+    ctx = T.parse(data)
+
+    parent = ET.Element("parent")
+    print(ctx)
+    xml = T.toET(context=ctx, name="test", parent=parent, is_root=True)
+    str = ET.tostring(xml).decode("utf-8")
+    print(str)
+    assert(xml.tag == "test")
+    assert(xml.attrib["asd"] == "1")
 
 
 def test_xml_rebuild_repeatuntil():
@@ -220,14 +242,14 @@ def test_xml_rebuild_repeatuntil():
     str = ET.tostring(xml).decode("utf-8")
     assert (str == """<Test foo="true" bar="true" baz="false"><test>2,3,4,5,6,0</test></Test>""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    ctx, size = T.fromET(context=d, parent=xml, name="Test", is_root=True)
 
-    assert (xml_rebuild["_offset_foo"] == 0)
-    assert (xml_rebuild["_size_foo"] == 1)
-    assert (xml_rebuild["_offset_size"] == xml_rebuild["_size_foo"])
-    assert (xml_rebuild["_size_test"] == 6)
-    assert (xml_rebuild["_offset_baz"] == 10)
-    rebuild = T.build(xml_rebuild)
+    assert (ctx["_offset_foo"] == 0)
+    assert (ctx["_size_foo"] == 1)
+    assert (ctx["_offset_size"] == ctx["_size_foo"])
+    assert (ctx["_size_test"] == 6)
+    assert (ctx["_offset_baz"] == 10)
+    rebuild = T.build(ctx)
 
     assert (size == len(data))
     assert (data == rebuild)
@@ -294,8 +316,8 @@ def test_xml_array_array_if_unnamed():
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context=d, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
     assert (rebuild == data)
 
 
@@ -315,8 +337,8 @@ def test_xml_array_rebuild_index():
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context=d, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
     assert (rebuild == data)
 
 
@@ -333,8 +355,8 @@ def test_xml_lazybound():
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
-    rebuild = T.build(xml_rebuild)
+    ctx, size = T.fromET(context=d, parent=xml, name="Test", is_root=True)
+    rebuild = T.build(ctx)
     assert (rebuild == data)
 
 
@@ -382,7 +404,7 @@ def test_xml_switch_nested():
     str = ET.tostring(xml).decode("utf-8")
     assert (str == """<Test foo="2"><Int32><testitem1 value="8" /></Int32></Test>""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    xml_rebuild, size = T.fromET(context=d, parent=xml, name="Test", is_root=True)
     rebuild = T.build(xml_rebuild)
     assert (rebuild == data)
 
@@ -407,6 +429,6 @@ def test_xml_switch_rebuild():
     str = ET.tostring(xml).decode("utf-8")
     assert (str == """<Test><Int8 value="8" /><testitem2 value="136316928" /></Test>""")
 
-    xml_rebuild, size, _ = T.fromET(xml, "Test", is_root=True)
+    xml_rebuild, size = T.fromET(context=d, parent=xml, name="Test", is_root=True)
     rebuild = T.build(xml_rebuild)
     assert (rebuild == data)

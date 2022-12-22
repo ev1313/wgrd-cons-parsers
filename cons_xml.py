@@ -128,7 +128,6 @@ def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
             elem = elem[0]
     else:
         elem = parent
-        assert (parent.tag == name)
 
     size = 0
     ctx["_offset"] = offset
@@ -172,6 +171,8 @@ def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
                 sc = sc.subcon
             else:
                 assert(0)
+            print(context)
+            print(name)
             return sc.toET(context=context, name=name, parent=parent)
     assert(0)
 
@@ -579,9 +580,9 @@ def LazyBound_toET(self, context, name=None, parent=None, is_root=False):
     return sc.toET(context=context, name=name, parent=parent)
 
 
-def LazyBound_fromET(self, parent, name, offset=0, is_root=False):
+def LazyBound_fromET(self, context, parent, name, offset=0, is_root=False):
     sc = self.subconfunc()
-    return sc.fromET(parent=parent, name=name, offset=offset, is_root=True)
+    return sc.fromET(context=context, parent=parent, name=name, offset=offset, is_root=False)
 
 
 LazyBound.toET = LazyBound_toET

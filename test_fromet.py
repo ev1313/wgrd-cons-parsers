@@ -164,6 +164,33 @@ def test_array_struct():
     assert (ctx["teststruct"]["_endoffset"] == size + 12)
     assert (ctx["teststruct"]["arr"] == [1, 2, 3, 4])
 
+def test_array_struct_nested():
+    T = Struct("foo" / Int32ul,
+               "arr" / Array(4, "teststr" / Struct(
+                   "t" / Int8ul,
+                   "w" / Int8ul,
+               )),
+               "bar" / Int32ul,
+               )
+
+    parent = ET.Element("parent")
+    child = ET.Element("teststruct")
+    arr = ET.Element("teststr")
+    arr.attrib["t"] = "42"
+    arr.attrib["w"] = "24"
+    arr2 = ET.Element("teststr")
+    arr2.attrib["t"] = "421"
+    arr2.attrib["w"] = "241"
+    child.attrib["foo"] = "2"
+    child.attrib["bar"] = "4"
+    child.append(arr)
+    child.append(arr2)
+    parent.append(child)
+    ctx = {"test": "someparentstuff"}
+    ctx, size = T.fromET(context=ctx, parent=parent, name="teststruct", offset=12)
+    print(ctx)
+    assert(0)
+
 
 def test_ifthenelse():
     T = If(this.foo == 1, "foo" / Struct("x"/ Int32ul))

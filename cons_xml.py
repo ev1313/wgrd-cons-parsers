@@ -227,6 +227,7 @@ def FormatField_fromET(self, context, parent, name, offset=0, is_root=False):
     elif isinstance(parent, str):
         elem = parent
     else:
+        print(f"FormatField_fromET {parent}")
         assert (0)
 
     assert (len(self.fmtstr) == 2)
@@ -394,13 +395,17 @@ def IfThenElse_fromET(self, context, parent, name, offset=0, is_root=False):
             ctx, size = self.elsesubcon.fromET(context=context, parent=parent, name=name, offset=offset)
             ctx = rename_in_context(ctx, self.elsesubcon.name, name)
             return ctx, size
-
     if elem is None:
         if self.thensubcon.__class__.__name__ == "Array":
-            elem = get_elem(self.thensubcon.subcon.name)
+            elems = get_elem(self.thensubcon.subcon.name)
+            if len(elems) > 0:
+                ctx, size= self.thensubcon.fromET(context=context, parent=parent, name=name, offset=offset)
+
     if elem is None:
         if self.elsesubcon.__class__.__name__ == "Array":
-            elem = get_elem(self.elsesubcon.subcon.name)
+            elems = get_elem(self.elsesubcon.subcon.name)
+            if len(elems) > 0:
+                return self.elsesubcon.fromET(context=context, parent=parent, name=name, offset=offset)
 
     # Pass
     if elem is None:
@@ -557,6 +562,10 @@ def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
     ret[name] = []
     idx = 0
     for x in elems:
+        print(idx)
+        print(ret)
+        print(name)
+        print(x)
         ret, csize = sc.fromET(context=ret, parent=x, name=name, offset=offset, is_root=True)
         ret[f"_offset_{name}_{idx}"] = offset
         ret[f"_size_{name}_{idx}"] = csize

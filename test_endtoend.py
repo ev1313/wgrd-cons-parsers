@@ -170,14 +170,12 @@ def test_xml_rebuild_prefixed_array():
 
     data = b"\x01\x06\x00\x00\x00\x02\x00\x65\x00\x66\x00"
     d = T.parse(data)
-    print(d)
 
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
     assert (str == """<Test foo="true"><test>2,0,101,0,102,0</test></Test>""")
 
     ctx, size = T.fromET(context={}, parent=xml, name="Test", is_root=True)
-    print(ctx)
     rebuild = T.build(ctx)
 
     assert (size == len(data))
@@ -197,10 +195,8 @@ def test_xml_rebuild_focusedseq():
     ctx = T.parse(data)
 
     parent = ET.Element("parent")
-    print(ctx)
     xml = T.toET(context=ctx, name="test", parent=parent, is_root=True)
     str = ET.tostring(xml).decode("utf-8")
-    print(str)
     assert(xml.tag == "test")
     assert(xml.attrib["asd"] == "1")
 
@@ -218,10 +214,8 @@ def test_xml_rebuild_renamed_focusedseq():
     ctx = T.parse(data)
 
     parent = ET.Element("parent")
-    print(ctx)
     xml = T.toET(context=ctx, name="test", parent=parent, is_root=True)
     str = ET.tostring(xml).decode("utf-8")
-    print(str)
     assert(xml.tag == "test")
     assert(xml.attrib["asd"] == "1")
 
@@ -334,10 +328,13 @@ def test_xml_array_rebuild_index():
     data = b"\x01\x08\x00\x01\x01\x08"
     d = T.parse(data)
 
+    print(d)
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
+    print(str)
 
     ctx, size = T.fromET(context=d, parent=xml, name="Test", is_root=True)
+    print(ctx)
     rebuild = T.build(ctx)
     assert (rebuild == data)
 

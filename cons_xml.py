@@ -557,24 +557,48 @@ def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
             assert (ass == 0)
             ass = 1
 
-    size = 0
-    ret = context
-    ret[name] = []
-    idx = 0
-    for x in elems:
-        print(idx)
-        print(ret)
-        print(name)
-        print(x)
-        ret, csize = sc.fromET(context=ret, parent=x, name=name, offset=offset, is_root=True)
-        ret[f"_offset_{name}_{idx}"] = offset
-        ret[f"_size_{name}_{idx}"] = csize
-        size += csize
-        ret[f"_cursize_{name}_{idx}"] = size
-        offset += csize
-        ret[f"_endoffset_{name}_{idx}"] = offset
-        idx += 1
-    return ret, size
+        size = 0
+        ret = context
+        ret[name] = []
+        idx = 0
+        for x in elems:
+            ret, csize = sc.fromET(context=ret, parent=x, name=name, offset=offset, is_root=True)
+            ret[f"_offset_{name}_{idx}"] = offset
+            ret[f"_size_{name}_{idx}"] = csize
+            size += csize
+            ret[f"_cursize_{name}_{idx}"] = size
+            offset += csize
+            ret[f"_endoffset_{name}_{idx}"] = offset
+            idx += 1
+        return ret, size
+    else:
+        size = 0
+        ret = Container()
+        ret[name] = []
+        ret["_"] = context
+        idx = 0
+        for x in elems:
+            print(idx)
+            print(context)
+            print(x)
+            print(name)
+            ret, csize = sc.fromET(context=ret, parent=x, name=name, offset=offset, is_root=True)
+            print(ret)
+            ret[f"_offset_{name}_{idx}"] = offset
+            ret[f"_size_{name}_{idx}"] = csize
+            size += csize
+            ret[f"_cursize_{name}_{idx}"] = size
+            offset += csize
+            ret[f"_endoffset_{name}_{idx}"] = offset
+            idx += 1
+
+            ret[name].append(ctx)
+        # remove _, because construct rebuild will fail otherwise
+        if "_" in ret.keys():
+            ret.pop("_")
+        return context | ret, size
+
+    assert(0)
 
 
 Array.toET = GenericList_toET

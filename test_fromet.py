@@ -189,7 +189,13 @@ def test_array_struct_nested():
     ctx = {"test": "someparentstuff"}
     ctx, size = T.fromET(context=ctx, parent=parent, name="teststruct", offset=12)
     print(ctx)
-    assert(0)
+    assert(ctx["test"] == "someparentstuff")
+    assert(ctx["teststruct"]["foo"] == 2)
+    assert(ctx["teststruct"]["arr"][0]["t"] == 42)
+    assert(ctx["teststruct"]["arr"][0]["w"] == 24)
+    assert(ctx["teststruct"]["arr"][1]["t"] == 421)
+    assert(ctx["teststruct"]["arr"][1]["w"] == 241)
+    assert(ctx["teststruct"]["bar"] == 4)
 
 
 def test_ifthenelse():

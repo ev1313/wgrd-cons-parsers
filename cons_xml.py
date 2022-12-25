@@ -187,8 +187,6 @@ def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
                 sc = sc.subcon
             else:
                 assert(0)
-            print(context)
-            print(name)
             return sc.toET(context=context, name=name, parent=parent)
     assert(0)
 
@@ -579,14 +577,7 @@ def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
     ret[name] = []
     idx = 0
     for x in elems:
-        print("before")
-        print(f"idx {idx}")
-        print(f"name {name}")
-        print(f"parent {x}")
-        print(f"context {ret}")
         ret, csize = sc.fromET(context=ret, parent=x, name=name, offset=offset, is_root=True)
-        print("after")
-        print(f"new context {ret}")
         ret[f"_offset_{name}_{idx}"] = offset
         ret[f"_size_{name}_{idx}"] = csize
         size += csize

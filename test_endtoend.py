@@ -328,13 +328,10 @@ def test_xml_array_rebuild_index():
     data = b"\x01\x08\x00\x01\x01\x08"
     d = T.parse(data)
 
-    print(d)
     xml = T.toET(d, name="Test", is_root=True)
     str = ET.tostring(xml).decode("utf-8")
-    print(str)
 
     ctx, size = T.fromET(context=d, parent=xml, name="Test", is_root=True)
-    print(ctx)
     rebuild = T.build(ctx)
     assert (rebuild == data)
 

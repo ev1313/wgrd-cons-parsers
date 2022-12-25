@@ -101,8 +101,6 @@ def test_struct_nested():
     subparent.append(struct)
     parent.append(subparent)
 
-    print(ET.tostring(parent).decode("utf-8"))
-
     ctx, size = T.fromET(context=ctx, parent=parent, name="teststruct", offset=56)
     assert (size == 16)
     assert (ctx["test"] == "someparentstuff")
@@ -189,7 +187,6 @@ def test_array_struct_nested():
     parent.append(child)
     ctx = {"test": "someparentstuff"}
     ctx, size = T.fromET(context=ctx, parent=parent, name="teststruct", offset=12)
-    print(ctx)
     assert (ctx["test"] == "someparentstuff")
     assert (ctx["teststruct"]["foo"] == 2)
     assert (ctx["teststruct"]["arr"][0]["t"] == 42)
@@ -243,8 +240,6 @@ def test_focuseseq():
     parent.attrib["foo"] = "5"
     ctx = {"test": "foobarbaz"}
     ctx, size = T.fromET(context=ctx, parent=parent, name="foo", offset=13)
-    print(ctx)
-    print(size)
     assert (size == 12)
     assert (ctx["test"] == "foobarbaz")
     assert (ctx["foo"] == 5)

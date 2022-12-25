@@ -56,6 +56,7 @@ def insert_or_append_field(context, name, value):
     elif isinstance(current, ListContainer) or isinstance(current, list):
         context[name].append(value)
     else:
+        print("insert_or_append_field failed")
         print(context)
         print(name)
         print(current)
@@ -86,10 +87,25 @@ def Renamed_toET(self, context, name=None, parent=None, is_root=False):
 
 
 def Renamed_fromET(self, context, parent, name, offset=0, is_root=False):
-    ctx, size = self.subcon.fromET(context=context, parent=parent, name=self.name, offset=offset, is_root=is_root)
+    ctx = context
+
+    # this renaming is necessary e.g. for GenericList,
+    # because it creates a list which needs to be renamed accordingly, so the following objects
+    # can append themselves to the list
+    renamed = False
+    if name != self.name and name in ctx.keys():
+        renamed = True
+        ctx = rename_in_context(context=context, name=name, new_name=self.name)
+
+    ctx, size = self.subcon.fromET(context=ctx, parent=parent, name=self.name, offset=offset, is_root=is_root)
+
+    if renamed:
+        ctx = rename_in_context(context=context, name=self.name, new_name=name)
+
     # construct requires this when rebuilding, else key error is raised
     if not self.name in ctx.keys():
         ctx[self.name] = None
+
     return ctx, size
 
 
@@ -148,9 +164,9 @@ def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
         ctx.pop("_")
 
     # now we have to go back up
-    if not is_root:
+    if not is_root or "_ignore_root" in context.keys():
         ret_ctx = context
-        ret_ctx[name] = ctx
+        insert_or_append_field(ret_ctx, name, ctx)
     else:
         ret_ctx = context | ctx
 
@@ -557,48 +573,32 @@ def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
             assert (ass == 0)
             ass = 1
 
-        size = 0
-        ret = context
-        ret[name] = []
-        idx = 0
-        for x in elems:
-            ret, csize = sc.fromET(context=ret, parent=x, name=name, offset=offset, is_root=True)
-            ret[f"_offset_{name}_{idx}"] = offset
-            ret[f"_size_{name}_{idx}"] = csize
-            size += csize
-            ret[f"_cursize_{name}_{idx}"] = size
-            offset += csize
-            ret[f"_endoffset_{name}_{idx}"] = offset
-            idx += 1
-        return ret, size
-    else:
-        size = 0
-        ret = Container()
-        ret[name] = []
-        ret["_"] = context
-        idx = 0
-        for x in elems:
-            print(idx)
-            print(context)
-            print(x)
-            print(name)
-            ret, csize = sc.fromET(context=ret, parent=x, name=name, offset=offset, is_root=True)
-            print(ret)
-            ret[f"_offset_{name}_{idx}"] = offset
-            ret[f"_size_{name}_{idx}"] = csize
-            size += csize
-            ret[f"_cursize_{name}_{idx}"] = size
-            offset += csize
-            ret[f"_endoffset_{name}_{idx}"] = offset
-            idx += 1
-
-            ret[name].append(ctx)
-        # remove _, because construct rebuild will fail otherwise
-        if "_" in ret.keys():
-            ret.pop("_")
-        return context | ret, size
-
-    assert(0)
+    size = 0
+    ret = context
+    ret["_ignore_root"] = True
+    ret[name] = []
+    idx = 0
+    for x in elems:
+        print("before")
+        print(f"idx {idx}")
+        print(f"name {name}")
+        print(f"parent {x}")
+        print(f"context {ret}")
+        ret, csize = sc.fromET(context=ret, parent=x, name=name, offset=offset, is_root=True)
+        print("after")
+        print(f"new context {ret}")
+        ret[f"_offset_{name}_{idx}"] = offset
+        ret[f"_size_{name}_{idx}"] = csize
+        size += csize
+        ret[f"_cursize_{name}_{idx}"] = size
+        offset += csize
+        ret[f"_endoffset_{name}_{idx}"] = offset
+        idx += 1
+    ret.pop("_ignore_root")
+    # remove _, because construct rebuild will fail otherwise
+    if "_" in ret.keys():
+        ret.pop("_")
+    return ret, size
 
 
 Array.toET = GenericList_toET

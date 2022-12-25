@@ -164,6 +164,7 @@ def test_array_struct():
     assert (ctx["teststruct"]["_endoffset"] == size + 12)
     assert (ctx["teststruct"]["arr"] == [1, 2, 3, 4])
 
+
 def test_array_struct_nested():
     T = Struct("foo" / Int32ul,
                "arr" / Array(4, "teststr" / Struct(
@@ -189,17 +190,17 @@ def test_array_struct_nested():
     ctx = {"test": "someparentstuff"}
     ctx, size = T.fromET(context=ctx, parent=parent, name="teststruct", offset=12)
     print(ctx)
-    assert(ctx["test"] == "someparentstuff")
-    assert(ctx["teststruct"]["foo"] == 2)
-    assert(ctx["teststruct"]["arr"][0]["t"] == 42)
-    assert(ctx["teststruct"]["arr"][0]["w"] == 24)
-    assert(ctx["teststruct"]["arr"][1]["t"] == 421)
-    assert(ctx["teststruct"]["arr"][1]["w"] == 241)
-    assert(ctx["teststruct"]["bar"] == 4)
+    assert (ctx["test"] == "someparentstuff")
+    assert (ctx["teststruct"]["foo"] == 2)
+    assert (ctx["teststruct"]["arr"][0]["t"] == 42)
+    assert (ctx["teststruct"]["arr"][0]["w"] == 24)
+    assert (ctx["teststruct"]["arr"][1]["t"] == 421)
+    assert (ctx["teststruct"]["arr"][1]["w"] == 241)
+    assert (ctx["teststruct"]["bar"] == 4)
 
 
 def test_ifthenelse():
-    T = If(this.foo == 1, "foo" / Struct("x"/ Int32ul))
+    T = If(this.foo == 1, "foo" / Struct("x" / Int32ul))
 
     parent = ET.Element("parent")
     child = ET.Element("foo")
@@ -208,12 +209,12 @@ def test_ifthenelse():
 
     ctx = {"test": "foobarbaz"}
     ctx, size = T.fromET(context=ctx, parent=parent, name="testname", offset=12)
-    assert(ctx["test"] == "foobarbaz")
-    assert(size == 4)
-    assert(ctx["testname"]["_offset"] == 12)
-    assert(ctx["testname"]["_size"] == 4)
-    assert(ctx["testname"]["_endoffset"] == 16)
-    assert(ctx["testname"]["x"] == 34)
+    assert (ctx["test"] == "foobarbaz")
+    assert (size == 4)
+    assert (ctx["testname"]["_offset"] == 12)
+    assert (ctx["testname"]["_size"] == 4)
+    assert (ctx["testname"]["_endoffset"] == 16)
+    assert (ctx["testname"]["x"] == 34)
 
     T = Struct("foo" / Int32ul,
                "ui32" / If(this.foo == 1, Int32ul),
@@ -228,11 +229,12 @@ def test_ifthenelse():
     parent.append(child)
     ctx = {"test": "foobarbaz"}
     ctx, size = T.fromET(context=ctx, parent=parent, name="testname", offset=12)
-    assert(ctx["test"] == "foobarbaz")
-    assert(size == 10)
-    assert(ctx["testname"]["_offset"] == 12)
-    assert(ctx["testname"]["_size"] == 10)
-    assert(ctx["testname"]["_endoffset"] == 22)
+    assert (ctx["test"] == "foobarbaz")
+    assert (size == 10)
+    assert (ctx["testname"]["_offset"] == 12)
+    assert (ctx["testname"]["_size"] == 10)
+    assert (ctx["testname"]["_endoffset"] == 22)
+
 
 def test_focuseseq():
     T = FocusedSeq("foo", "one" / Rebuild(Int32ul, this.foo), "foo" / Int32ul, "two" / Rebuild(Int32ul, this.foo))
@@ -243,6 +245,6 @@ def test_focuseseq():
     ctx, size = T.fromET(context=ctx, parent=parent, name="foo", offset=13)
     print(ctx)
     print(size)
-    assert(size == 12)
-    assert(ctx["test"] == "foobarbaz")
-    assert(ctx["foo"] == 5)
+    assert (size == 12)
+    assert (ctx["test"] == "foobarbaz")
+    assert (ctx["foo"] == 5)

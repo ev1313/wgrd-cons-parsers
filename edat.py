@@ -11,6 +11,13 @@ from io import BytesIO
 from cons_utils import *
 from cons_xml import *
 
+EDatFileHeader = Struct(
+    "offset" / Int32ul,
+    "pad0" / Padding(4),
+    "size" / Int32ul,
+    "pad" / Padding(4),
+    "checksum" / Bytes(16),
+)
 
 EDat = Struct(
     "magic" / Magic(b"edat"),

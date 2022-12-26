@@ -49,8 +49,17 @@ if __name__ == "__main__":
         f.close()
 
         if not args.pack:
+            sys.stderr.write("parsing edat...\n")
             ctx = EDat.parse(data)
+            ctx["_cons_xml_output_directory"] = args.output
+            sys.stderr.write("generating xml...\n")
             xml = EDat.toET(context=ctx, name="EDat", parent=None, is_root=True)
+            sys.stderr.write("indenting xml...\n")
+            ET.indent(xml, space="  ", level=0)
+            str = ET.tostring(xml).decode("utf-8")
+            sys.stderr.write("writing xml...\n")
+            f = open(os.path.join(args.output, f"{os.path.basename(input)}.xml"), "wb")
+            f.write(str.encode("utf-8"))
             print(xml)
         else:
             assert(0)

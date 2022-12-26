@@ -38,7 +38,7 @@ def create_child_context(context, name, list_index=None, is_root=False):
         # then the name is e.g. "bar_1"
         ctx = Container(_=context)
         ctx[name] = data
-
+    ctx["_root"] = context
     return ctx
 
 
@@ -475,6 +475,8 @@ Rebuild.toET = Ignore_toET
 Rebuild.fromET = Ignore_fromET
 Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
+Padded.toET = Ignore_toET
+Padded.fromET = Ignore_fromET
 
 
 def IgnoreCls_toET(context, name=None, parent=None, is_root=False):

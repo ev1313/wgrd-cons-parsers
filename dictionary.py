@@ -2,6 +2,8 @@ import pdb
 from io import BytesIO
 from cons_xml import *
 
+import os
+import hashlib
 
 # sorting algorithm used by the game for filepaths
 def dictionarySort(l):
@@ -217,6 +219,7 @@ class FileDictionary(Dictionary):
             file = Pointer(offset_data + header.offset, Aligned(sector_size, Bytes(header.size))).parse_stream(stream)
             assert(not path in self.files.keys())
             self.files[path] = file
+            assert(header.checksum == hashlib.md5(file).digest())
 
         # FIXME: assert *aligned*
         #assert(size_data == sum([len(f) for _, f in self.files.items()]))
@@ -226,9 +229,15 @@ class FileDictionary(Dictionary):
     def toET(self, context, name=None, parent=None, is_root=False):
         assert(name is not None)
         assert(parent is not None)
+        if "_root" in context.keys():
+            outpath = context["_root"].get("_cons_xml_output_directory", "out")
+        else:
+            outpath = context.get("_cons_xml_output_directory", "out")
+
         files = get_current_field(context, name)
         for path, file in files.items():
-            fspath = os.path.join("out/", path.replace("\\", os.sep))
+            fspath = os.path.join(outpath, path.replace("\\\\", os.sep))
+            os.makedirs(os.path.dirname(fspath), exist_ok=True)
             with open(fspath, "wb") as f:
                 f.write(file)
                 child = ET.Element("File")

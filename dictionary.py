@@ -67,7 +67,7 @@ class Dictionary(Construct):
 
                     assert (f.tell() == (c + pathSize))
 
-                    print("DICTIONARY-directory %5d %5d%s %s" % (pathSize, entrySize, "  |" * len(path), formatDictionaryPath(path + [s])))
+                    #print("DICTIONARY-directory %5d %5d%s %s" % (pathSize, entrySize, "  |" * len(path), formatDictionaryPath(path + [s])))
 
                     files |= parsePath(f, path + [s], (c + entrySize) if entrySize != 0 else ending)
                 else:
@@ -78,8 +78,7 @@ class Dictionary(Construct):
                     filePath = "".join(path + [s])
                     files[filePath] = file
 
-                    print("DICTIONARY-file      %5d %5d%s %s" % (pathSize, entrySize, "  |" * len(path), formatDictionaryPath(path + [s])))
-                    print(file)
+                    #print("DICTIONARY-file      %5d %5d%s %s" % (pathSize, entrySize, "  |" * len(path), formatDictionaryPath(path + [s])))
 
                 # We should be at the end of this entry now
                 assert (f.tell() == ((c + entrySize) if entrySize != 0 else ending))
@@ -95,7 +94,7 @@ class Dictionary(Construct):
         # Start recursion
         self.dictitems = parsePath(stream, [], ending)
 
-        self._allitems_parsed(stream, **context)
+        return self._allitems_parsed(stream, **context)
 
     def _build(self, obj, stream, context, path):
         # Stolen from https://stackoverflow.com/a/11016430
@@ -189,9 +188,7 @@ class Dictionary(Construct):
         return header + parseTrie(root, [], b'', True)[10:]
 
     def _sizeof(self, context, path):
-        # return computed size (when fixed size or depends on context)
-        # or raise SizeofError (when variable size or unknown)
-        pass
+        raise SizeofError(f"Dictionary doesn't support sizeof {path}")
 
 
 class FileDictionary(Dictionary):
@@ -209,10 +206,11 @@ class FileDictionary(Dictionary):
         sector_size = self.sector_size(ctx) if callable(self.sector_size) else self.sector_size
         self.files = {}
         for path, header in self.dictitems.items():
-            file = Pointer(offset_data + header.offset, Bytes(header.size)).parse_stream(stream)
-            print(file)
+            file = Pointer(offset_data + header.offset, Aligned(sector_size, Bytes(header.size))).parse_stream(stream)
             assert(not path in self.files.keys())
             self.files[path] = file
-        assert(size_data == sum([len(f) for _, f in self.files.items()]))
+
+        # FIXME: assert *aligned*
+        #assert(size_data == sum([len(f) for _, f in self.files.items()]))
 
         return self.files

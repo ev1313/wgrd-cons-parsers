@@ -236,7 +236,7 @@ class FileDictionary(Dictionary):
 
         files = get_current_field(context, name)
         for path, file in files.items():
-            fspath = os.path.join(outpath, path.replace("\\\\", os.sep))
+            fspath = os.path.join(outpath, path.replace("\\", os.sep).replace("\\\\", os.sep))
             os.makedirs(os.path.dirname(fspath), exist_ok=True)
             with open(fspath, "wb") as f:
                 f.write(file)
@@ -245,4 +245,8 @@ class FileDictionary(Dictionary):
                 parent.append(child)
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
-        assert (0)
+        elems = parent.findall("File")
+        context[name] = {}
+        for elem in elems:
+            path = elem.attrib["path"]
+            context[name][] =

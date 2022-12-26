@@ -135,8 +135,8 @@ class Dictionary(Construct):
 
                     # Write a file
                     buffer = BytesIO()
-                    write32(buffer, 0)
-                    write32(buffer, 0 if isLast else 8 + len(data) + len(_part))
+                    buffer.write(Const(0, Int32ul).build({}))
+                    buffer.write(Const(0 if isLast else 8 + len(data) + len(_part), Int32ul).build({}))
                     buffer.write(data)
                     buffer.write(_part)
 
@@ -247,6 +247,13 @@ class FileDictionary(Dictionary):
     def fromET(self, context, parent, name, offset=0, is_root=False):
         elems = parent.findall("File")
         context[name] = {}
+        size=0
         for elem in elems:
-            path = elem.attrib["path"]
-            context[name][] =
+            if "_root" in context.keys():
+                inpath = context["_root"].get("_cons_xml_input_directory", "out")
+            else:
+                inpath = context.get("_cons_xml_input_directory", "out")
+            path = os.path.join(inpath, elem.attrib["path"])
+            data = open(path, "rb").read()
+            context[name][path] = data
+        return context, size

@@ -62,4 +62,15 @@ if __name__ == "__main__":
             f.write(str.encode("utf-8"))
             print(xml)
         else:
-            assert(0)
+            assert(len(os.path.basename(str(input))) >= 5)
+            xml = ET.fromstring(data.decode("utf-8"))
+            sys.stderr.write("rebuilding from xml...\n")
+            ctx = {"_cons_xml_input_directory": os.path.dirname(input)}
+            ctx, size = EDat.fromET(context=ctx, parent=xml, name="EDat", is_root=True)
+            pdb.set_trace()
+            sys.stderr.write("building edat...\n")
+            rebuilt_data = EDat.build(ctx)
+            sys.stderr.write("writing edat...\n")
+            f = open(os.path.join(args.output, f"{os.path.basename(str(input)[:-4])}"), "wb")
+            f.write(rebuilt_data)
+            f.close()

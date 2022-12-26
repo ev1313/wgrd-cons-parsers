@@ -15,7 +15,7 @@ from construct import *
 def evaluate(param, context):
     return param(context) if callable(param) else param
 
-
+# used by toET
 def create_child_context(context, name, list_index=None, is_root=False):
     if not is_root:
         assert (context is not None)
@@ -38,9 +38,25 @@ def create_child_context(context, name, list_index=None, is_root=False):
         # then the name is e.g. "bar_1"
         ctx = Container(_=context)
         ctx[name] = data
-    ctx["_root"] = context
+    _root = ctx.get("_root", None)
+    if _root is None:
+        ctx["_root"] = context
+    else:
+        ctx["_root"] = _root
     return ctx
 
+# used by fromET
+def create_parent_context(context):
+    # we go down one layer
+    ctx = Container()
+    ctx["_"] = context
+    # add root node
+    _root = context.get("_root", None)
+    if _root is None:
+        ctx["_root"] = context
+    else:
+        ctx["_root"] = _root
+    return ctx
 
 def get_current_field(context, name):
     idx = context.get("_index", None)
@@ -134,8 +150,7 @@ def Struct_toET(self, context, name=None, parent=None, is_root=False):
 
 def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
     # we go down one layer
-    ctx = Container()
-    ctx["_"] = context
+    ctx = create_parent_context(context)
 
     # get the xml element
     if not is_root:
@@ -192,8 +207,7 @@ def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
 
 
 def FocusedSeq_fromET(self, context, parent, name, offset=0, is_root=False):
-    ctx = Container()
-    ctx["_"] = context
+    ctx = create_parent_context(context)
     size = 0
     ctx["_offset"] = offset
 
@@ -297,7 +311,8 @@ def Bytes_toET(self, context, name=None, parent=None, is_root=False):
 def Bytes_fromET(self, context, parent, name, offset=0, is_root=False):
     elem = parent.attrib[name]
     b = b"".fromhex(elem)
-    return b, len(b), {}
+    context[name] = b
+    return context, len(b)
 
 
 Bytes.toET = Bytes_toET
@@ -475,9 +490,14 @@ Rebuild.toET = Ignore_toET
 Rebuild.fromET = Ignore_fromET
 Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
-Padded.toET = Ignore_toET
-Padded.fromET = Ignore_fromET
 
+def Padded_fromET(self, context, parent, name, offset=0, is_root=False):
+    # will be rebuilt, but size is required
+    return context, self.length
+
+
+Padded.toET = Ignore_toET
+Padded.fromET = Padded_fromET
 
 def IgnoreCls_toET(context, name=None, parent=None, is_root=False):
     # does not need to be in the XML (will be rebuilt)

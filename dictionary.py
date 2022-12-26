@@ -2,6 +2,7 @@ import pdb
 from io import BytesIO
 from cons_xml import *
 
+
 # sorting algorithm used by the game for filepaths
 def dictionarySort(l):
     s = []
@@ -22,6 +23,7 @@ def dictionarySort(l):
         assert (c in rank)
         s += [rank.index(c)]
     return s
+
 
 def formatDictionaryPath(path):
     return ",".join([part for part in path])
@@ -45,7 +47,7 @@ class Dictionary(Construct):
     def _parse(self, stream, context, path):
         offset = self.offset(context) if callable(self.offset) else self.offset
         size = self.size(context) if callable(self.size) else self.size
-        ending = offset+size
+        ending = offset + size
 
         def parsePath(f, path, ending):
             files = {}
@@ -113,7 +115,7 @@ class Dictionary(Construct):
 
             path += [part]
 
-            #print("%s Enter %s (%s)" % (" |" * len(path), formatDictionaryPath(path), part))
+            # print("%s Enter %s (%s)" % (" |" * len(path), formatDictionaryPath(path), part))
 
             # FIXME: Use aligned string writer instead
             _part = part + b'\x00'
@@ -125,7 +127,7 @@ class Dictionary(Construct):
                 nodeIsLast = (i == (trieNodeCount - 1))
 
                 if node == b'':
-                    #print("%s > Found %s (%s)" % (" |" * len(path), formatDictionaryPath(path), part))
+                    # print("%s > Found %s (%s)" % (" |" * len(path), formatDictionaryPath(path), part))
 
                     # FIXME: encode file
 
@@ -156,7 +158,7 @@ class Dictionary(Construct):
                     data = parseTrie(nodeTrie, [*path], nodePart, nodeIsLast)
                     allData += data
 
-            #print("%s Leave %s (%s)" % (" |" * len(path), formatDictionaryPath(path), part))
+            # print("%s Leave %s (%s)" % (" |" * len(path), formatDictionaryPath(path), part))
 
             # Write a part
             buffer = BytesIO()
@@ -190,6 +192,12 @@ class Dictionary(Construct):
     def _sizeof(self, context, path):
         raise SizeofError(f"Dictionary doesn't support sizeof {path}")
 
+    def toET(self, context, name=None, parent=None, is_root=False):
+        assert (0)
+
+    def fromET(self, context, parent, name, offset=0, is_root=False):
+        assert (0)
+
 
 class FileDictionary(Dictionary):
     def __init__(self, subcon, offset, size, offset_data, size_data, sector_size):
@@ -214,3 +222,18 @@ class FileDictionary(Dictionary):
         #assert(size_data == sum([len(f) for _, f in self.files.items()]))
 
         return self.files
+
+    def toET(self, context, name=None, parent=None, is_root=False):
+        assert(name is not None)
+        assert(parent is not None)
+        files = get_current_field(context, name)
+        for path, file in files.items():
+            fspath = os.path.join("out/", path.replace("\\", os.sep))
+            with open(fspath, "wb") as f:
+                f.write(file)
+                child = ET.Element("File")
+                child.attrib["path"] = path
+                parent.append(child)
+
+    def fromET(self, context, parent, name, offset=0, is_root=False):
+        assert (0)

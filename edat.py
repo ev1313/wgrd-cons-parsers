@@ -50,6 +50,7 @@ if __name__ == "__main__":
 
         if not args.pack:
             ctx = EDat.parse(data)
-            print(ctx)
+            xml = EDat.toET(context=ctx, name="EDat", parent=None, is_root=True)
+            print(xml)
         else:
             assert(0)

@@ -24,18 +24,31 @@ def dictionarySort(l):
     return s
 
 def formatDictionaryPath(path):
-    return ",".join([part.decode('utf-8') for part in path])
+    return ",".join([part for part in path])
 
 
 class Dictionary(Construct):
-    def __init__(self, subcon):
+    def __init__(self, subcon, offset, size):
+        super().__init__()
         self.subcon = subcon
-        self.files = {}
+        self.offset = offset
+        self.size = size
+        self.dictitems = {}
+
+    def _parse_dictitem(self, stream, **contextkw):
+        return self.subcon.parse_stream(stream, **contextkw)
+
+    # used by FileDictionary
+    def _allitems_parsed(self, stream, **contextkw):
+        return self.dictitems
 
     def _parse(self, stream, context, path):
+        offset = self.offset(context) if callable(self.offset) else self.offset
+        size = self.size(context) if callable(self.size) else self.size
+        ending = offset+size
+
         def parsePath(f, path, ending):
             files = {}
-
             # FIXME: Use count instead?
             while f.tell() != ending:
                 c = f.tell()
@@ -58,14 +71,15 @@ class Dictionary(Construct):
 
                     files |= parsePath(f, path + [s], (c + entrySize) if entrySize != 0 else ending)
                 else:
-                    # FIXME: get the file data here
+                    file = self._parse_dictitem(stream, **context)
 
                     s = Aligned(2, CString("utf-8")).parse_stream(f)
 
-                    filePath = b"".join(path + [s])
+                    filePath = "".join(path + [s])
                     files[filePath] = file
 
-                    #print("DICTIONARY-file      %5d %5d%s %s" % (pathSize, entrySize, "  |" * len(path), formatDictionaryPath(path + [s])))
+                    print("DICTIONARY-file      %5d %5d%s %s" % (pathSize, entrySize, "  |" * len(path), formatDictionaryPath(path + [s])))
+                    print(file)
 
                 # We should be at the end of this entry now
                 assert (f.tell() == ((c + entrySize) if entrySize != 0 else ending))
@@ -79,7 +93,9 @@ class Dictionary(Construct):
         assert (stream.read(6) == b'\x00' * 6)
 
         # Start recursion
-        self.files = parsePath(stream, [], ending)
+        self.dictitems = parsePath(stream, [], ending)
+
+        self._allitems_parsed(stream, **context)
 
     def _build(self, obj, stream, context, path):
         # Stolen from https://stackoverflow.com/a/11016430
@@ -176,3 +192,27 @@ class Dictionary(Construct):
         # return computed size (when fixed size or depends on context)
         # or raise SizeofError (when variable size or unknown)
         pass
+
+
+class FileDictionary(Dictionary):
+    def __init__(self, subcon, offset, size, offset_data, size_data, sector_size):
+        super().__init__(subcon, offset, size)
+        self.offset_data = offset_data
+        self.size_data = size_data
+        self.sector_size = sector_size
+        self.files = {}
+
+    def _allitems_parsed(self, stream, **contextkw):
+        ctx = Container(**contextkw)
+        offset_data = self.offset_data(ctx) if callable(self.offset_data) else self.offset_data
+        size_data = self.size_data(ctx) if callable(self.size_data) else self.size_data
+        sector_size = self.sector_size(ctx) if callable(self.sector_size) else self.sector_size
+        self.files = {}
+        for path, header in self.dictitems.items():
+            file = Pointer(offset_data + header.offset, Bytes(header.size)).parse_stream(stream)
+            print(file)
+            assert(not path in self.files.keys())
+            self.files[path] = file
+        assert(size_data == sum([len(f) for _, f in self.files.items()]))
+
+        return self.files

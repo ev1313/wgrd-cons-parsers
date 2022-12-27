@@ -24,10 +24,10 @@ EDat = Struct(
     "magic" / Magic(b"edat"),
     "unk0" / Const(2, Int32ul), # number of tables maybe?
     "pad0" / Padding(17),
-    "offset_files" / Rebuild(Int32ul, this._offset_files),
-    "size_files" / Rebuild(Int32ul, this._size_files),
-    "offset_data" / Rebuild(Int32ul, this._endoffset_files),
-    "size_data" / Rebuild(Int32ul, lambda ctx: sum([len(x) for _, x in ctx.files.items()])),
+    "offset_files" / Rebuild(Int32ul, this._files_dictionary_offset),
+    "size_files" / Rebuild(Int32ul, this._files_dictionary_size),
+    "offset_data" / Rebuild(Int32ul, this._files_data_offset),
+    "size_data" / Rebuild(Int32ul, this._files_data_size),
     "pad1" / Padding(4),
     "sectorSize" / Int32ul,
     "checksum" / Bytes(16), # md5 checksum of the whole files section

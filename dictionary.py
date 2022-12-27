@@ -36,6 +36,7 @@ class Dictionary(Construct):
         self.offset = offset
         self.size = size
         self.dictitems = {}
+        self._dictionary_size = 0
 
     # parses the dictitem, overloaded by FileDictionary
     def _parse_dictitem(self, stream, **contextkw):
@@ -202,6 +203,7 @@ class Dictionary(Construct):
         # FIXME: Ignore b'' in root?
         data = header + parseTrie(root, [], '', True)[10:]
         stream.write(data)
+        self._dictionary_size = len(data)
 
         self._allitems_build(obj, stream, **context)
 
@@ -226,6 +228,7 @@ class FileDictionary(Dictionary):
         self.sector_size = sector_size
         self.files = {}
         self._current_offset = 0
+        self._data_size = 0
 
     def _build_dictitem(self, obj, stream, **contextkw):
         ctx = Container(**contextkw)
@@ -267,9 +270,12 @@ class FileDictionary(Dictionary):
         alignment_size = aligned_offset - initial_offset
         stream.write(b"\x00" * alignment_size)
 
+        size = 0
         for path, data in obj.items():
             aligned_data = Aligned(sector_size, Bytes(len(data))).build(data)
             stream.write(aligned_data)
+            size += len(aligned_data)
+        self._data_size = size
 
     def _build(self, obj, stream, context, path):
         self._current_offset=0
@@ -296,7 +302,6 @@ class FileDictionary(Dictionary):
     def fromET(self, context, parent, name, offset=0, is_root=False):
         elems = parent.findall("File")
         context[name] = {}
-        size=0
         for elem in elems:
             if "_root" in context.keys():
                 inpath = context["_root"].get("_cons_xml_input_directory", "out")
@@ -308,4 +313,16 @@ class FileDictionary(Dictionary):
             context[name][path] = data
         # FIXME: return _sizeof here with dictionary size + size of files
         # FIXME: add offset/size of dictionary + offset/size of files here
-        return context, size
+        data = self.build(context[name], **context)
+
+        context[f"_{name}_dictionary_offset"] = offset
+        context[f"_{name}_dictionary_size"] = self._dictionary_size
+        context[f"_{name}_data_offset"] = offset + self._dictionary_size
+        context[f"_{name}_data_size"] = self._data_size
+        print(offset)
+        print(self._dictionary_size)
+        print(offset + self._dictionary_size)
+        print(self._data_size)
+        # FIXME: assert *aligned*
+        #assert(len(data) == self._data_size + self._dictionary_size)
+        return context, len(data)

@@ -49,6 +49,9 @@ class Dictionary(Construct):
     def _allitems_parsed(self, stream, **contextkw):
         return self.dictitems
 
+    def _allitems_build(self, obj, stream, **contextkw):
+        return obj
+
     def _parse(self, stream, context, path):
         offset = self.offset(context) if callable(self.offset) else self.offset
         size = self.size(context) if callable(self.size) else self.size
@@ -199,6 +202,9 @@ class Dictionary(Construct):
         # FIXME: Ignore b'' in root?
         data = header + parseTrie(root, [], '', True)[10:]
         stream.write(data)
+
+        self._allitems_build(obj, stream, **context)
+
         # FIXME: maybe just return correctly sorted dictionary
         return obj
 
@@ -222,11 +228,16 @@ class FileDictionary(Dictionary):
         self._current_offset = 0
 
     def _build_dictitem(self, obj, stream, **contextkw):
+        ctx = Container(**contextkw)
         path, data = obj
+        sector_size = self.sector_size(ctx) if callable(self.sector_size) else self.sector_size
+        # only for calculating the correct offsets
+        aligned_size = len(data) if len(data) % sector_size == 0 else (int(len(data) / sector_size) + 1) * sector_size
+
         ctx = {"offset": self._current_offset,
                "size": len(data),
                "checksum": hashlib.md5(data).digest()}
-        self._current_offset += len(data)
+        self._current_offset += aligned_size
         return self.subcon.build(ctx)
 
     def _allitems_parsed(self, stream, **contextkw):
@@ -245,6 +256,20 @@ class FileDictionary(Dictionary):
         #assert(size_data == sum([len(f) for _, f in self.files.items()]))
 
         return self.files
+
+    def _allitems_build(self, obj, stream, **contextkw):
+        ctx = Container(**contextkw)
+        sector_size = self.sector_size(ctx) if callable(self.sector_size) else self.sector_size
+
+        # the offset of the files section is also sector_size aligned
+        initial_offset = stream.tell()
+        aligned_offset = initial_offset if initial_offset % sector_size == 0 else (int(initial_offset / sector_size) + 1) * sector_size
+        alignment_size = aligned_offset - initial_offset
+        stream.write(b"\x00" * alignment_size)
+
+        for path, data in obj.items():
+            aligned_data = Aligned(sector_size, Bytes(len(data))).build(data)
+            stream.write(aligned_data)
 
     def _build(self, obj, stream, context, path):
         self._current_offset=0
@@ -278,7 +303,7 @@ class FileDictionary(Dictionary):
             else:
                 inpath = context.get("_cons_xml_input_directory", "out")
             path = elem.attrib["path"]
-            filepath = os.path.join(inpath, path)
+            filepath = os.path.join(inpath, path.replace("\\", os.sep).replace("\\\\", os.sep))
             data = open(filepath, "rb").read()
             context[name][path] = data
         # FIXME: return _sizeof here with dictionary size + size of files

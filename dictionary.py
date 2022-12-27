@@ -11,17 +11,15 @@ def dictionarySort(l):
 
     def R(a, b):
         l = []
-        for x in range(a[0], b[0] + 1):
-            l += [bytes([x])]
+        for c in range(ord(a[0]), ord(b[0]) + 1):
+            l += [chr(c)]
         return l
 
     # Allowed symbols and their suspected precedence
-    rank = [b'\\'] + [b'-'] + [b'.'] + R(b'0', b'9') + [b'_'] + [b' '] + R(b'a', b'z') + R(b'A', b'Z')
+    rank = ['\\'] + ['-'] + ['.'] + R('0', '9') + ['_'] + [' '] + R('a', 'z') + R('A', 'Z')
 
     # print(rank)
-    for x in l:
-        c = bytes([x])
-        # print(c)
+    for c in l:
         assert (c in rank)
         s += [rank.index(c)]
     return s
@@ -44,8 +42,7 @@ class Dictionary(Construct):
         return self.subcon.parse_stream(stream, **contextkw)
 
     def _build_dictitem(self, obj, stream, **contextkw):
-        stream.write(self.subcon.build(obj))
-        return obj
+        return self.subcon.build(obj)
 
     # called after all items were parsed to return the final dict
     # overloaded by FileDictionary
@@ -116,8 +113,8 @@ class Dictionary(Construct):
             for word in words:
                 current_dict = root
                 for letter in word:
-                    current_dict = current_dict.setdefault(bytes([letter]), {})
-                current_dict[b''] = None
+                    current_dict = current_dict.setdefault(letter, {})
+                current_dict[''] = None
             return root
 
         # FIXME: Shouldn't require the `part` argument anymore as we have `path[-1]`
@@ -129,26 +126,27 @@ class Dictionary(Construct):
             # print("%s Enter %s (%s)" % (" |" * len(path), formatDictionaryPath(path), part))
 
             # FIXME: Use aligned string writer instead
-            _part = part + b'\x00'
+            _part = part.encode("utf-8") + b'\x00'
             if len(_part) % 2 != 0:
                 _part += b'\x00'
+
+            assert(_part == Aligned(2, CString("utf-8")).build(part))
 
             trieNodeCount = len(trie.keys())
             for i, node in enumerate(trie.keys()):
                 nodeIsLast = (i == (trieNodeCount - 1))
 
-                if node == b'':
+                if node == '':
                     # print("%s > Found %s (%s)" % (" |" * len(path), formatDictionaryPath(path), part))
 
-                    triePath = b"".join(path)
-                    file = files[triePath]
-                    data = encodeFile(triePath, file)
-                    self._build_dictitem(obj, stream, **context)
+                    triePath = "".join(path)
+                    item = obj[triePath]
+                    data = self._build_dictitem((triePath, item), stream, **context)
 
                     # Write a file
                     buffer = BytesIO()
-                    buffer.write(Const(0, Int32ul).build({}))
-                    buffer.write(Const(0 if isLast else 8 + len(data) + len(_part), Int32ul).build({}))
+                    buffer.write(Const(0, Int32ul).build(None))
+                    buffer.write(Const(0 if isLast else 8 + len(data) + len(_part), Int32ul).build(None))
                     buffer.write(data)
                     buffer.write(_part)
 
@@ -163,7 +161,7 @@ class Dictionary(Construct):
                     nodeTrie = trie[node]
                     while len(list(nodeTrie.keys())) == 1:
                         nodeTrieNode = list(nodeTrie.keys())[0]
-                        if nodeTrieNode == b'':
+                        if nodeTrieNode == '':
                             break
                         nodePart += nodeTrieNode
                         nodeTrie = nodeTrie[nodeTrieNode]
@@ -175,7 +173,7 @@ class Dictionary(Construct):
 
             # Write a part
             buffer = BytesIO()
-            buffer.write(Int32ul.buile(8+len(_part)))
+            buffer.write(Int32ul.build(8+len(_part)))
             buffer.write(Int32ul.build(0 if isLast else 8 + len(allData) + len(_part)))
             buffer.write(_part)
             buffer.write(allData)
@@ -199,7 +197,7 @@ class Dictionary(Construct):
 
         # Note that this also removes some junk from the head
         # FIXME: Ignore b'' in root?
-        data = header + parseTrie(root, [], b'', True)[10:]
+        data = header + parseTrie(root, [], '', True)[10:]
         stream.write(data)
         # FIXME: maybe just return correctly sorted dictionary
         return obj
@@ -221,6 +219,15 @@ class FileDictionary(Dictionary):
         self.size_data = size_data
         self.sector_size = sector_size
         self.files = {}
+        self._current_offset = 0
+
+    def _build_dictitem(self, obj, stream, **contextkw):
+        path, data = obj
+        ctx = {"offset": self._current_offset,
+               "size": len(data),
+               "checksum": hashlib.md5(data).digest()}
+        self._current_offset += len(data)
+        return self.subcon.build(ctx)
 
     def _allitems_parsed(self, stream, **contextkw):
         ctx = Container(**contextkw)
@@ -238,6 +245,10 @@ class FileDictionary(Dictionary):
         #assert(size_data == sum([len(f) for _, f in self.files.items()]))
 
         return self.files
+
+    def _build(self, obj, stream, context, path):
+        self._current_offset=0
+        super()._build(obj, stream, context, path)
 
     def toET(self, context, name=None, parent=None, is_root=False):
         assert(name is not None)
@@ -266,7 +277,10 @@ class FileDictionary(Dictionary):
                 inpath = context["_root"].get("_cons_xml_input_directory", "out")
             else:
                 inpath = context.get("_cons_xml_input_directory", "out")
-            path = os.path.join(inpath, elem.attrib["path"])
-            data = open(path, "rb").read()
+            path = elem.attrib["path"]
+            filepath = os.path.join(inpath, path)
+            data = open(filepath, "rb").read()
             context[name][path] = data
+        # FIXME: return _sizeof here with dictionary size + size of files
+        # FIXME: add offset/size of dictionary + offset/size of files here
         return context, size

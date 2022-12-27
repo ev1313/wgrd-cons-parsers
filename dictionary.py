@@ -39,10 +39,16 @@ class Dictionary(Construct):
         self.size = size
         self.dictitems = {}
 
+    # parses the dictitem, overloaded by FileDictionary
     def _parse_dictitem(self, stream, **contextkw):
         return self.subcon.parse_stream(stream, **contextkw)
 
-    # used by FileDictionary
+    def _build_dictitem(self, obj, stream, **contextkw):
+        stream.write(self.subcon.build(obj))
+        return obj
+
+    # called after all items were parsed to return the final dict
+    # overloaded by FileDictionary
     def _allitems_parsed(self, stream, **contextkw):
         return self.dictitems
 
@@ -101,6 +107,9 @@ class Dictionary(Construct):
         return self._allitems_parsed(stream, **context)
 
     def _build(self, obj, stream, context, path):
+        if obj is None:
+            obj = {}
+
         # Stolen from https://stackoverflow.com/a/11016430
         def createTrie(words):
             root = dict()
@@ -131,7 +140,10 @@ class Dictionary(Construct):
                 if node == b'':
                     # print("%s > Found %s (%s)" % (" |" * len(path), formatDictionaryPath(path), part))
 
-                    # FIXME: encode file
+                    triePath = b"".join(path)
+                    file = files[triePath]
+                    data = encodeFile(triePath, file)
+                    self._build_dictitem(obj, stream, **context)
 
                     # Write a file
                     buffer = BytesIO()
@@ -146,7 +158,6 @@ class Dictionary(Construct):
                     return bytes(buffer.getbuffer())
 
                 else:
-
                     # Reduce common prefix (like a radix tree)
                     nodePart = node
                     nodeTrie = trie[node]
@@ -164,19 +175,18 @@ class Dictionary(Construct):
 
             # Write a part
             buffer = BytesIO()
-            write32(buffer, 8 + len(_part))
-            write32(buffer, 0 if isLast else 8 + len(allData) + len(_part))
+            buffer.write(Int32ul.buile(8+len(_part)))
+            buffer.write(Int32ul.build(0 if isLast else 8 + len(allData) + len(_part)))
             buffer.write(_part)
             buffer.write(allData)
 
             return bytes(buffer.getbuffer())
 
-        # Get paths
-        filePaths = list(self.files.keys())
+        filePaths = list(obj.keys())
 
         # If we don't have any files, we are done; no header will be written
         if len(filePaths) == 0:
-            return b''
+            return {}
 
         # The game expects a specific order
         sortedFilePaths = sorted(filePaths, key=dictionarySort)
@@ -189,7 +199,10 @@ class Dictionary(Construct):
 
         # Note that this also removes some junk from the head
         # FIXME: Ignore b'' in root?
-        return header + parseTrie(root, [], b'', True)[10:]
+        data = header + parseTrie(root, [], b'', True)[10:]
+        stream.write(data)
+        # FIXME: maybe just return correctly sorted dictionary
+        return obj
 
     def _sizeof(self, context, path):
         raise SizeofError(f"Dictionary doesn't support sizeof {path}")

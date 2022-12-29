@@ -300,6 +300,8 @@ class FileDictionary(Dictionary):
                 parent.append(child)
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
+        sector_size = self.sector_size(context) if callable(self.sector_size) else self.sector_size
+
         elems = parent.findall("File")
         context[name] = {}
         for elem in elems:
@@ -311,18 +313,18 @@ class FileDictionary(Dictionary):
             filepath = os.path.join(inpath, path.replace("\\", os.sep).replace("\\\\", os.sep))
             data = open(filepath, "rb").read()
             context[name][path] = data
-        # FIXME: return _sizeof here with dictionary size + size of files
-        # FIXME: add offset/size of dictionary + offset/size of files here
+        # build dictionary to get size of it
         data = self.build(context[name], **context)
 
+        # calculate data offset
+        initial_offset = offset + self._dictionary_size
+        aligned_offset = initial_offset if initial_offset % sector_size == 0 else (int(initial_offset / sector_size) + 1) * sector_size
+        # set offsets amd sizes
         context[f"_{name}_dictionary_offset"] = offset
         context[f"_{name}_dictionary_size"] = self._dictionary_size
-        context[f"_{name}_data_offset"] = offset + self._dictionary_size
+        context[f"_{name}_dictionary_checksum"] = hashlib.md5(data[0:self._dictionary_size]).digest()
+        context[f"_{name}_data_offset"] = aligned_offset
         context[f"_{name}_data_size"] = self._data_size
-        print(offset)
-        print(self._dictionary_size)
-        print(offset + self._dictionary_size)
-        print(self._data_size)
         # FIXME: assert *aligned*
         #assert(len(data) == self._data_size + self._dictionary_size)
         return context, len(data)

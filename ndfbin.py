@@ -273,7 +273,7 @@ if __name__ == "__main__":
             assert(str(input).endswith(".ndfbin.xml"))
             xml = ET.fromstring(data.decode("utf-8"))
             sys.stderr.write("rebuilding from xml...\n")
-            xml_rebuild, size, _ = NdfBin.fromET(xml, "NdfBin", is_root=True)
+            xml_rebuild, size = NdfBin.fromET(context={}, parent=xml, name="NdfBin", is_root=True)
             sys.stderr.write("building ndfbin...\n")
             rebuilt_data = NdfBin.build(xml_rebuild)
             sys.stderr.write("writing ndfbin...\n")

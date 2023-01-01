@@ -459,15 +459,17 @@ def Switch_fromET(self, context, parent, name, offset=0, is_root=False):
             elems = [parent]
         else:
             elems = parent.findall(case.name)
-        assert (len(elems) in [0, 1])
-        if len(elems) == 1:
-            ctx, size = case.fromET(context=context, parent=parent, name=case.name, offset=offset)
 
-            if isinstance(case, Renamed):
-                ctx = rename_in_context(ctx, case.name, name)
+        if len(elems) == 0:
+            continue
 
-            ctx[f"_switchid_{name}"] = case_id
-            return ctx, size
+        ctx, size = case.fromET(context=context, parent=parent, name=case.name, offset=offset)
+
+        if isinstance(case, Renamed):
+            ctx = rename_in_context(ctx, case.name, name)
+
+        ctx[f"_switchid_{name}"] = case_id
+        return ctx, size
     # not found
     assert (0)
 

@@ -243,3 +243,35 @@ def test_focuseseq():
     assert (size == 12)
     assert (ctx["test"] == "foobarbaz")
     assert (ctx["foo"] == 5)
+
+def test_prefixedarray_struct_nested():
+    T = Struct("foo" / Int32ul,
+               "arr" / PrefixedArray(Int32ul, "teststr" / Struct(
+                   "t" / Int8ul,
+                   "w" / Int8ul,
+                   )),
+               "bar" / Int32ul,
+               )
+
+    parent = ET.Element("parent")
+    child = ET.Element("teststruct")
+    arr = ET.Element("teststr")
+    arr.attrib["t"] = "42"
+    arr.attrib["w"] = "24"
+    arr2 = ET.Element("teststr")
+    arr2.attrib["t"] = "421"
+    arr2.attrib["w"] = "241"
+    child.attrib["foo"] = "2"
+    child.attrib["bar"] = "4"
+    child.append(arr)
+    child.append(arr2)
+    parent.append(child)
+    ctx = {"test": "someparentstuff"}
+    ctx, size = T.fromET(context=ctx, parent=parent, name="teststruct", offset=12)
+    assert (ctx["test"] == "someparentstuff")
+    assert (ctx["teststruct"]["foo"] == 2)
+    assert (ctx["teststruct"]["arr"][0]["t"] == 42)
+    assert (ctx["teststruct"]["arr"][0]["w"] == 24)
+    assert (ctx["teststruct"]["arr"][1]["t"] == 421)
+    assert (ctx["teststruct"]["arr"][1]["w"] == 241)
+    assert (ctx["teststruct"]["bar"] == 4)

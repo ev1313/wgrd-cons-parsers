@@ -630,7 +630,7 @@ def LazyBound_toET(self, context, name=None, parent=None, is_root=False):
 
 def LazyBound_fromET(self, context, parent, name, offset=0, is_root=False):
     sc = self.subconfunc()
-    return sc.fromET(context=context, parent=parent, name=name, offset=offset, is_root=False)
+    return sc.fromET(context=context, parent=parent, name=name, offset=offset, is_root=True)
 
 
 LazyBound.toET = LazyBound_toET

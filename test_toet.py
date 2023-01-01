@@ -223,6 +223,7 @@ def test_ifthenelse_in_struct():
     parent = ET.Element("parent")
     ctx = {"teststruct": {"foo": 1, "ui32": 23, "baz": 4}}
     child = T.toET(context=ctx, name="teststruct", parent=parent)
+    assert (child.tag == "teststruct")
     assert (child.attrib["foo"] == "1")
     assert (child.attrib["ui32"] == "23")
     assert (child.attrib["baz"] == "4")
@@ -236,3 +237,24 @@ def test_focusedseq():
     child = T.toET(context=ctx, name="test", parent=parent)
     assert (child is None)
     assert (parent.attrib["test"] == "5")
+
+def test_lazybound_array():
+    Foo = Struct("asd" / Int32ul,
+                 "fgh" / Int32ul,)
+
+    Test = Struct("foo" / Int32ul,
+                  "test" / PrefixedArray(Int32ul, "TestItem" / LazyBound(lambda: Foo)),
+                  "baz" / Int32ul,)
+
+    parent = ET.Element("parent")
+    ctx = {"teststruct": {"foo": 1, "test": [{"asd": 123, "fgh": 321}, {"asd": 1, "fgh": 2}], "baz": 32}}
+    child = Test.toET(context=ctx, name="teststruct", parent=parent)
+    assert(child.tag == "teststruct")
+    assert(child.attrib["foo"] == "1")
+    assert (child.attrib["baz"] == "32")
+    items = child.findall("TestItem")
+    assert(len(items) == 2)
+    assert(items[0].attrib["asd"] == "123")
+    assert(items[0].attrib["fgh"] == "321")
+    assert(items[1].attrib["asd"] == "1")
+    assert(items[1].attrib["fgh"] == "2")

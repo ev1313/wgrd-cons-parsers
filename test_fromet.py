@@ -275,3 +275,74 @@ def test_prefixedarray_struct_nested():
     assert (ctx["teststruct"]["arr"][1]["t"] == 421)
     assert (ctx["teststruct"]["arr"][1]["w"] == 241)
     assert (ctx["teststruct"]["bar"] == 4)
+
+def test_lazybound():
+    Foo = Struct("asd" / Int32ul,
+                 "fgh" / Int32ul,)
+
+    Test = Struct("foo" / Int32ul,
+                  "test" / LazyBound(lambda: Foo),
+                  "baz" / Int32ul,)
+
+    parent = ET.Element("parent")
+    child = ET.Element("teststruct")
+    child.attrib["foo"] = 1
+    child.attrib["baz"] = 2
+    child_child = ET.Element("test")
+    child_child.attrib["asd"] = 23
+    child_child.attrib["fgh"] = 32
+    child.append(child_child)
+    parent.append(child)
+
+    ctx = {"test": "someparentstuff"}
+    ctx, size = Test.fromET(context=ctx, parent=parent, name="teststruct", offset=12)
+    assert (ctx["test"] == "someparentstuff")
+    assert (ctx["teststruct"]["foo"] == 1)
+    assert (ctx["teststruct"]["baz"] == 2)
+    assert(ctx["teststruct"]["test"]["asd"] == 23)
+    assert(ctx["teststruct"]["test"]["fgh"] == 32)
+
+def test_lazybound_array():
+    Foo = Struct("asd" / Int32ul,
+                 "fgh" / Int32ul,)
+
+    Test = Struct("foo" / Int32ul,
+                  "test" / PrefixedArray(Int32ul, "TestItem" / LazyBound(lambda: Foo)),
+                  "baz" / Int32ul,)
+
+    parent = ET.Element("parent")
+    child = ET.Element("teststruct")
+    child.attrib["foo"] = 1
+    child.attrib["baz"] = 2
+    child_child_1 = ET.Element("TestItem")
+    child_child_1.attrib["asd"] = 23
+    child_child_1.attrib["fgh"] = 32
+    child_child_2 = ET.Element("TestItem")
+    child_child_2.attrib["asd"] = 231
+    child_child_2.attrib["fgh"] = 321
+    child.append(child_child_1)
+    child.append(child_child_2)
+    parent.append(child)
+
+    ctx = {"test": "someparentstuff"}
+    ctx, size = Test.fromET(context=ctx, parent=parent, name="teststruct", offset=12)
+    assert (ctx["test"] == "someparentstuff")
+    assert (ctx["teststruct"]["foo"] == 1)
+    assert (ctx["teststruct"]["baz"] == 2)
+    assert(ctx["teststruct"]["test"][0]["asd"] == 23)
+    assert(ctx["teststruct"]["test"][0]["fgh"] == 32)
+    assert(ctx["teststruct"]["test"][1]["asd"] == 231)
+    assert(ctx["teststruct"]["test"][1]["fgh"] == 321)
+
+
+def test_switch():
+    TestType = Struct("foo" / Int32ul,
+               "test" / Switch(this.foo,
+                               {
+                                   0x0: "Boolean" / Struct("value" / Enum(Int8ul, false=0, true=1)),
+                                   0x1: "String" / Struct("value" / PascalString(Int32ul, "utf-16")),
+                                   0x2: "Test" / Struct("value" / LazyBound(lambda: TestType)),
+                                   0x3: "TestArray" / PrefixedArray(Int32ul, "TestItem" / LazyBound(lambda: TestType)),
+                               }
+               ),
+               "baz" / Int32ul)

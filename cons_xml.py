@@ -358,7 +358,7 @@ def StringEncoded_fromET(self, context, parent, name, offset=0, is_root=False):
         elem = parent
     else:
         elem = parent.attrib[name]
-    if self.encoding == ["ascii", "utf-8"]:
+    if self.encoding in ["ascii", "utf-8"]:
         size = len(elem)
     elif self.encoding in ["utf-16-le", "utf-16-be", "utf-16"]:
         size = len(elem) * 2
@@ -494,12 +494,26 @@ Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
 
 def Padded_fromET(self, context, parent, name, offset=0, is_root=False):
+    # FIXME: fix the sizes given in the context
     # will be rebuilt, but size is required
     return context, self.length
 
 
 Padded.toET = Ignore_toET
 Padded.fromET = Padded_fromET
+
+def Aligned_toET(self, context, name=None, parent=None, is_root=False):
+    return self.subcon.toET(context=context, name=name, parent=parent, is_root=is_root)
+
+def Aligned_fromET(self, context, parent, name, offset=0, is_root=False):
+    ctx, size = self.subcon.fromET(context=context, parent=parent, name=name, offset=offset, is_root=is_root)
+    # add alignment to size
+    aligned_size = size if size % self.modulus == 0 else (int(size / self.modulus) + 1) * self.modulus
+    # FIXME: fix the sizes given in the context
+    return ctx, aligned_size
+
+Aligned.toET = Aligned_toET
+Aligned.fromET = Aligned_fromET
 
 def IgnoreCls_toET(context, name=None, parent=None, is_root=False):
     # does not need to be in the XML (will be rebuilt)

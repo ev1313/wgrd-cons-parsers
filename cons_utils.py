@@ -38,34 +38,25 @@ def decompress_zlib(data, wbits=0, depth=0):
     return g
 
 
-class ZLibCompressed(Tunnel):
-    """ works exactly like Compressed, but with our zlib decompress function """
+class ZlibCompressed(Adapter):
 
     def __init__(self, subcon):
         super().__init__(subcon)
 
-    def _decode(self, data, context, path):
-        pdb.set_trace()
-        decompressed_data = decompress_zlib(data)
+    def _decode(self, obj, context, path):
+        decompressed_data = decompress_zlib(obj)
         self.decompressed_size = len(decompressed_data)
         return decompressed_data
 
-    def _encode(self, data, context, path):
-        self.decompressed_size = len(data)
-        return compress_zlib(data)
+    def _encode(self, obj, context, path):
+        self.decompressed_size = len(obj)
+        return compress_zlib(obj)
 
     def toET(self, context, name=None, parent=None):
-        elem = ET.Element("Compressed")
-        pdb.set_trace()
-        ctx = create_child_context(context, "Compressed")
-        child = self.subcon.toET(context=ctx, name=name, parent=elem)
-        if child is not None:
-            elem.append(child)
-        return elem
+        return Bytes_toET(self, context, name, parent)
 
-    def fromET(self, parent, name):
-        assert(0)
-
+    def fromET(self, elem):
+        return Bytes_fromET(self, elem)
 
 
 class RepeatUntilSize(Subconstruct):
@@ -141,13 +132,13 @@ class RepeatUntilSize(Subconstruct):
 RepeatUntilSize.toET = GenericList_toET
 RepeatUntilSize.fromET = GenericList_fromET
 
+
 def readArea(type):
     def checkArea(obj, lst, ctx):
         # print(ctx._io.tell(), (ctx.offset + ctx.size))
         return ctx._io.tell() >= (ctx.offset + ctx.size)
 
     return IfThenElse(this.size > 0,
-                        Pointer(lambda foo: int(foo.offset), RepeatUntilSize(checkArea, type)),
-                        Array(0, type)
-                        )
-
+                      Pointer(lambda foo: int(foo.offset), RepeatUntilSize(checkArea, type)),
+                      Array(0, type)
+                      )

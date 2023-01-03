@@ -57,6 +57,20 @@ NDFType = Struct(
         0x0000001A: "GUID" / Struct("data" / Bytes(16)),
         0x0000001C: "PathReference" / Struct("stringIndex" / Int32ul),
         0x0000001D: "LocalisationHash" / Struct("data" / Bytes(8)),
+        0x0000001E: "UnknownBlob" / Struct( # StringBlob?
+            "_size" / Int32ul,
+            "unk0" / Int8ul, #Const(b'\x01'),
+            "data" / Switch(this.unk0, {
+                0: "Raw" / Struct(
+                    "data" / Bytes(this._._size)
+                    ),
+                1: "Zlib" / Struct(
+                    "uncompressedSize" / Int32ul,
+                    #FIXME: Zero pad output of ZlibCompressed to `uncompressedSize`
+                    "data" / ZlibCompressed(Bytes(this._._size - 4)),
+                    )
+            })
+        ),
         0x00000022: "Pair" / Struct(
             "first" / LazyBound(lambda: NDFType),
             "second" / LazyBound(lambda: NDFType),
@@ -69,7 +83,7 @@ NDFType = Struct(
 
 NDFProperty = Struct(
     "propertyIndex" / Int32ul,
-    "Type" / If(lambda ctx: ctx.propertyIndex != 0xABABABAB, "ndf" / NDFType),
+    "value" / If(lambda ctx: ctx.propertyIndex != 0xABABABAB, NDFType),
     )
 
 NDFObject = Struct(

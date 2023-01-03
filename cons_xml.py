@@ -585,6 +585,13 @@ def GenericList_toET(self, context, name=None, parent=None, is_root=False):
 def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
     sc = self.subcon
     scname = self.subcon.name
+
+    children = [x for x in parent]
+    if len(children) == 0:
+        ret = context
+        ret[name] = []
+        return ret, 0
+
     # check if the parent contains children of the subcon name
     if scname is not None:
         elems = parent.findall(scname)

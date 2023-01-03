@@ -41,6 +41,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--pack", action="store_true")
     parser.add_argument("inputs", type=pathlib.Path, nargs='+', help="path to the input directory (pack) or file (unpack)")
     parser.add_argument("-o", "--output", type=pathlib.Path, default="./out/", help="path to the output directory (unpack) / file (pack)")
+    parser.add_argument("-c", "--compat", action="store_true", help="compatibility mode for enokhas ModdingSuite, which doesn't align the files correctly")
     args = parser.parse_args()
 
     for input in args.inputs:
@@ -50,7 +51,8 @@ if __name__ == "__main__":
 
         if not args.pack:
             sys.stderr.write("parsing edat...\n")
-            ctx = EDat.parse(data)
+            context = {"_cons_xml_filesdictionary_alignment": not args.compat}
+            ctx = EDat.parse(data, **context)
             ctx["_cons_xml_output_directory"] = args.output
             sys.stderr.write("generating xml...\n")
             xml = EDat.toET(context=ctx, name="EDat", parent=None, is_root=True)

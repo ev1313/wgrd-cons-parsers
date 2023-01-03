@@ -245,12 +245,20 @@ class FileDictionary(Dictionary):
 
     def _allitems_parsed(self, stream, **contextkw):
         ctx = Container(**contextkw)
+        if "_root" in ctx.keys():
+            enforce_alignment = ctx["_root"]["_"].get("_cons_xml_filesdictionary_alignment", True)
+        else:
+            enforce_alignment = ctx["_"].get("_cons_xml_filesdictionary_alignment", True)
+
         offset_data = self.offset_data(ctx) if callable(self.offset_data) else self.offset_data
         size_data = self.size_data(ctx) if callable(self.size_data) else self.size_data
         sector_size = self.sector_size(ctx) if callable(self.sector_size) else self.sector_size
         self.files = {}
         for path, header in self.dictitems.items():
-            file = Pointer(offset_data + header.offset, Aligned(sector_size, Bytes(header.size))).parse_stream(stream)
+            if enforce_alignment:
+                file = Pointer(offset_data + header.offset, Aligned(sector_size, Bytes(header.size))).parse_stream(stream)
+            else:
+                file = Pointer(offset_data + header.offset, Bytes(header.size)).parse_stream(stream)
             assert(not path in self.files.keys())
             self.files[path] = file
             assert(header.checksum == hashlib.md5(file).digest())

@@ -15,6 +15,7 @@ from construct import *
 def evaluate(param, context):
     return param(context) if callable(param) else param
 
+
 # used by toET
 def create_child_context(context, name, list_index=None, is_root=False):
     if not is_root:
@@ -45,6 +46,7 @@ def create_child_context(context, name, list_index=None, is_root=False):
         ctx["_root"] = _root
     return ctx
 
+
 # used by fromET
 def create_parent_context(context):
     # we go down one layer
@@ -58,12 +60,14 @@ def create_parent_context(context):
         ctx["_root"] = _root
     return ctx
 
+
 def get_current_field(context, name):
     idx = context.get("_index", None)
     if idx is not None:
         return context[f"{name}_{idx}"]
     else:
         return context[name]
+
 
 def insert_or_append_field(context, name, value):
     current = context.get(name, None)
@@ -76,7 +80,7 @@ def insert_or_append_field(context, name, value):
         print(context)
         print(name)
         print(current)
-        assert(0)
+        assert (0)
     return context
 
 
@@ -193,7 +197,7 @@ Struct.fromET = Struct_fromET
 
 
 def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
-    assert(isinstance(self.parsebuildfrom, str))
+    assert (isinstance(self.parsebuildfrom, str))
     for sc in self.subcons:
         if sc.name == self.parsebuildfrom:
             # FocusedSeq has to ignore the Rename
@@ -201,9 +205,9 @@ def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
             if sc.__class__.__name__ == "Renamed":
                 sc = sc.subcon
             else:
-                assert(0)
+                assert (0)
             return sc.toET(context=context, name=name, parent=parent)
-    assert(0)
+    assert (0)
 
 
 def FocusedSeq_fromET(self, context, parent, name, offset=0, is_root=False):
@@ -214,14 +218,14 @@ def FocusedSeq_fromET(self, context, parent, name, offset=0, is_root=False):
     s = None
     for sc in self.subcons:
         if sc.name == self.parsebuildfrom:
-            assert(sc.__class__.__name__ == "Renamed")
+            assert (sc.__class__.__name__ == "Renamed")
             s = sc.subcon
             ctx, childsize = s.fromET(context=ctx, parent=parent, name=name, offset=offset, is_root=False)
             size += childsize
         else:
             size += sc._sizeof(context=context, path="")
 
-    assert(s is not None)
+    assert (s is not None)
 
     ctx["_size"] = size
 
@@ -428,7 +432,7 @@ def IfThenElse_fromET(self, context, parent, name, offset=0, is_root=False):
         if self.thensubcon.__class__.__name__ == "Array":
             elems = get_elem(self.thensubcon.subcon.name)
             if len(elems) > 0:
-                ctx, size= self.thensubcon.fromET(context=context, parent=parent, name=name, offset=offset)
+                ctx, size = self.thensubcon.fromET(context=context, parent=parent, name=name, offset=offset)
 
     if elem is None:
         if self.elsesubcon.__class__.__name__ == "Array":
@@ -493,27 +497,51 @@ Rebuild.fromET = Ignore_fromET
 Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
 
+
+def Padded_toET(self, context, name=None, parent=None, is_root=False):
+    return self.subcon.toET(context=context, name=name, parent=parent, is_root=is_root)
+
+
 def Padded_fromET(self, context, parent, name, offset=0, is_root=False):
-    # FIXME: fix the sizes given in the context
-    # will be rebuilt, but size is required
-    return context, self.length
+    ctx, size = self.subcon.fromET(context=context, parent=parent, name=name, offset=offset, is_root=is_root)
+    # FIXME: fix the sizes given in the context ?
+    return ctx, self.length
 
 
-Padded.toET = Ignore_toET
+Padded.toET = Padded_toET
 Padded.fromET = Padded_fromET
+
+
+def FixedSized_toET(self, context, name=None, parent=None, is_root=False):
+    return self.subcon.toET(context=context, name=name, parent=parent, is_root=is_root)
+
+
+def FixedSized_fromET(self, context, parent, name, offset=0, is_root=False):
+    ctx, size = self.subcon.fromET(context=context, parent=parent, name=name, offset=offset, is_root=is_root)
+    length = evaluate(self.length, context)
+    assert (size <= length)
+    return ctx, size
+
+
+FixedSized.toET = FixedSized_toET
+FixedSized.fromET = FixedSized_fromET
+
 
 def Aligned_toET(self, context, name=None, parent=None, is_root=False):
     return self.subcon.toET(context=context, name=name, parent=parent, is_root=is_root)
+
 
 def Aligned_fromET(self, context, parent, name, offset=0, is_root=False):
     ctx, size = self.subcon.fromET(context=context, parent=parent, name=name, offset=offset, is_root=is_root)
     # add alignment to size
     aligned_size = size if size % self.modulus == 0 else (int(size / self.modulus) + 1) * self.modulus
-    # FIXME: fix the sizes given in the context
+    # FIXME: fix the sizes given in the context ?
     return ctx, aligned_size
+
 
 Aligned.toET = Aligned_toET
 Aligned.fromET = Aligned_fromET
+
 
 def IgnoreCls_toET(context, name=None, parent=None, is_root=False):
     # does not need to be in the XML (will be rebuilt)
@@ -609,7 +637,7 @@ def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
             sc = sc.subcon
 
         elem = parent.findall(name)[0]
-        assert(elem is not None)
+        assert (elem is not None)
         ass = 0
         for row in csv.reader([elem.text]):
             elems = row
@@ -642,6 +670,9 @@ Array.fromET = GenericList_fromET
 
 RepeatUntil.toET = GenericList_toET
 RepeatUntil.fromET = GenericList_fromET
+
+GreedyRange.toET = GenericList_toET
+GreedyRange.fromET = GenericList_fromET
 
 
 def LazyBound_toET(self, context, name=None, parent=None, is_root=False):

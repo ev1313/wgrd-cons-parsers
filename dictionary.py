@@ -43,7 +43,8 @@ class Dictionary(Construct):
         return self.subcon.parse_stream(stream, **contextkw)
 
     def _build_dictitem(self, obj, stream, **contextkw):
-        return self.subcon.build(obj)
+        path, real_obj = obj
+        return self.subcon.build(real_obj)
 
     # called after all items were parsed to return the final dict
     # overloaded by FileDictionary
@@ -216,23 +217,48 @@ class Dictionary(Construct):
     def toET(self, context, name=None, parent=None, is_root=False):
         assert (name is not None)
         assert (parent is not None)
-        if "_root" in context.keys():
-            outpath = context["_root"].get("_cons_xml_output_directory", "out")
-        else:
-            outpath = context.get("_cons_xml_output_directory", "out")
 
         files = get_current_field(context, name)
         for path, file in files.items():
-            fspath = os.path.join(outpath, path.replace("\\", os.sep).replace("\\\\", os.sep))
-            os.makedirs(os.path.dirname(fspath), exist_ok=True)
-            with open(fspath, "wb") as f:
-                f.write(file)
-                child = ET.Element("File")
-                child.attrib["path"] = path
-                parent.append(child)
+            ctx = Container(_=context, **files)
+            ctx[name] = file
+            ctx["_root"] = context
+            elem = self.subcon.toET(context=ctx, name=name, parent=None)
+            elem.attrib["path"] = path
+            assert(elem is not None)
+            parent.append(elem)
+
+        return None
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
-        assert (0)
+        if isinstance(self.subcon, Renamed):
+            elems = parent.findall(self.subcon.name)
+        else:
+            elems = parent.findall(name)
+
+        ret = context
+        ret["_ignore_root"] = True
+        ret[name] = {}
+        ret[f"{name}_list"] = []
+        for elem in elems:
+            path = elem.attrib.pop("path")
+            ret, child_size = self.subcon.fromET(context=ret, parent=elem, name=f"{name}_list", offset=offset, is_root=True)
+            ret[name][path] = Container(ret[f"{name}_list"][0])
+            ret[f"{name}_list"] = []
+
+        ret.pop(f"{name}_list")
+        ret.pop("_ignore_root")
+        # remove _, because construct rebuild will fail otherwise
+        if "_" in ret.keys():
+            ret.pop("_")
+
+        # build dictionary to get size of it
+        data = self.build(ret[name], **ret)
+        ret[f"_{name}_dictionary_offset"] = offset
+        ret[f"_{name}_dictionary_size"] = self._dictionary_size
+        ret[f"_{name}_dictionary_checksum"] = hashlib.md5(data[0:self._dictionary_size]).digest()
+
+        return ret, self._dictionary_size
 
 
 class FileDictionary(Dictionary):

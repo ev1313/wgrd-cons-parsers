@@ -44,16 +44,21 @@ FileItem = Struct(
     "nodesIndex" / Int16ul,
 )
 
+VertexFormat = Struct(
+    "length" / Int32ul,
+    "formats" / Array(this._.count, "VertexFormat" / Struct("name" / PaddedString(this._.length, "utf-8")))
+)
+
 Spk = Struct(
     "typeMagic" / Const(b"MESH"),
     "platformMagic" / Const(b"PCPC"),
     "version" / Const(7, Int32ul),
     "fileSize" / Int32ul,
     "checksum" / Bytes(16),
-    "block1" / Header(Bytes(this.size)),
-    "block2" / HeaderWithCount(Bytes(this.size)),
-    "files" / HeaderWithCount(Dictionary(FileItem, this.offset, this.size)),
-    "vertexFormats" / HeaderWithCount(Bytes(this.size)),
+    "block1" / Header(Pass),
+    "block2" / HeaderWithCount(Pass),
+    "files" / HeaderWithCount(Dictionary("FileItem" / FileItem, this.offset, this.size)),
+    "vertexFormats" / HeaderWithCount(VertexFormat),
     "materials" / HeaderWithCount(Bytes(this.size)),
     "unknown0" / HeaderWithCount(Bytes(this.size)),
     "unknown1" / HeaderWithCount(Bytes(this.size)),

@@ -498,6 +498,15 @@ Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
 
 
+def IgnoreZeroSized_fromET(self, context, parent, name, offset=0, is_root=False):
+    # not required in dict, as it will be rebuilt
+    return context, 0
+
+
+Check.toET = Ignore_toET
+Check.fromET = IgnoreZeroSized_fromET
+
+
 def Padded_toET(self, context, name=None, parent=None, is_root=False):
     return self.subcon.toET(context=context, name=name, parent=parent, is_root=is_root)
 
@@ -557,8 +566,6 @@ Tell.toET = IgnoreCls_toET
 Tell.fromET = IgnoreCls_fromET
 Pass.toET = IgnoreCls_toET
 Pass.fromET = IgnoreCls_fromET
-Check.toET = IgnoreCls_toET
-Check.fromET = IgnoreCls_fromET
 
 
 def Pointer_toET(self, context, name=None, parent=None, is_root=False):

@@ -23,8 +23,10 @@ def decompress_ndfbin(data):
 
     if parsed_header["compressed"] == "compressed":
         uncompressed_data = data[:40] + decompress_zlib(data[44:])
+        print("Uncompressed")
     else:
         uncompressed_data = data
+        print("Copied")
     return uncompressed_data
 
 
@@ -36,3 +38,4 @@ if __name__ == "__main__":
 
     of1 = open(sys.argv[2], "wb")
     of1.write(uncompressed_data)
+    print("Wrote to %s" % sys.argv[2])

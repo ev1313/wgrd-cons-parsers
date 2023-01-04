@@ -247,8 +247,10 @@ class FileDictionary(Dictionary):
         ctx = Container(**contextkw)
         if "_root" in ctx.keys():
             enforce_alignment = ctx["_root"]["_"].get("_cons_xml_filesdictionary_alignment", True)
+            disable_checks = ctx["_root"]["_"].get("_cons_xml_filesdictionary_disable_checks", False)
         else:
             enforce_alignment = ctx["_"].get("_cons_xml_filesdictionary_alignment", True)
+            disable_checks = ctx["_"].get("_cons_xml_filesdictionary_disable_checks", False)
 
         offset_data = self.offset_data(ctx) if callable(self.offset_data) else self.offset_data
         size_data = self.size_data(ctx) if callable(self.size_data) else self.size_data
@@ -261,7 +263,11 @@ class FileDictionary(Dictionary):
                 file = Pointer(offset_data + header.offset, Bytes(header.size)).parse_stream(stream)
             assert(not path in self.files.keys())
             self.files[path] = file
-            assert(header.checksum == hashlib.md5(file).digest())
+
+            # WARNO has some files (ZZ_2.dat) which have apparently broken checksums
+            # FIXME: investigate further
+            if not disable_checks:
+                assert(header.checksum == hashlib.md5(file).digest())
 
         # FIXME: assert *aligned*
         #assert(size_data == sum([len(f) for _, f in self.files.items()]))

@@ -505,6 +505,8 @@ def IgnoreZeroSized_fromET(self, context, parent, name, offset=0, is_root=False)
 
 Check.toET = Ignore_toET
 Check.fromET = IgnoreZeroSized_fromET
+Probe.toET = Ignore_toET
+Probe.fromET = IgnoreZeroSized_fromET
 
 
 def Padded_toET(self, context, name=None, parent=None, is_root=False):

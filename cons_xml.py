@@ -371,6 +371,22 @@ def StringEncoded_fromET(self, context, parent, name, offset=0, is_root=False):
     else:
         assert (0)
 
+    if isinstance(self.subcon, Prefixed):
+        # PascalString -> length prefixed, is ok
+        pass
+    elif isinstance(self.subcon, FixedSized):
+        # e.g. PaddedString -> size is increased
+        size = evaluate(self.subcon.length, context)
+    elif isinstance(self.subcon, NullTerminated):
+        # CString
+        pass
+    elif isinstance(self.subcon, GreedyBytes):
+        # GreedyString
+        pass
+    else:
+        # unknown, check if size needs to be adjusted
+        assert(0)
+
     ctx = insert_or_append_field(context, name, elem)
     return ctx, size
 
@@ -531,6 +547,7 @@ def FixedSized_fromET(self, context, parent, name, offset=0, is_root=False):
     ctx, size = self.subcon.fromET(context=context, parent=parent, name=name, offset=offset, is_root=is_root)
     length = evaluate(self.length, context)
     assert (size <= length)
+    pdb.set_trace()
     return ctx, size
 
 

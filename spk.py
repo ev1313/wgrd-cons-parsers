@@ -65,7 +65,7 @@ VertexFormat = Struct(
 )
 
 VertexFormatHeader = Struct(
-    "offset" / Rebuild(Int32ul, this._._offset_files + this._._size_files),
+    "offset" / Rebuild(Int32ul, this._.files.offset + this._.files.size),
     "size" / Rebuild(Int32ul, this._ptrsize_data),
     "count" / Rebuild(Int32ul, len_(this.data.formats)),
     "data" / Pointer(this.offset, VertexFormat)
@@ -138,14 +138,14 @@ Spk = Struct(
     "block2" / EmptyHeaderWithCount,
     "files" / HeaderWithCount(Dictionary("FileItem" / FileItem, this.offset, this.size), this._._endoffset_unknown10indices),
     "vertexFormats" / VertexFormatHeader,
-    "materials" / HeaderWithCount(Bytes(this.size), this._._offset_vertexFormats + this._._size_vertexFormats),
+    "materials" / HeaderWithCount(Bytes(this.size), this._.vertexFormats.offset + this._.vertexFormats.size),
     "unknown0" / HeaderWithCount(Array(this.count, Unknown0), lambda ctx: 0),
     "unknown1" / HeaderWithCount(Array(this.count, Unknown1), lambda ctx: 0),
-    "meshes" / HeaderWithCount(Array(this.count, "Mesh" / Mesh), this._._offset_materials + this._._size_materials),
-    "drawCalls" / HeaderWithCount(Array(this.count, "DrawCall" / DrawCall), this._._offset_meshes + this._._size_meshes),
-    "ibufTable" / HeaderWithCount(Array(this.count, "Ibuf" / IbufHeader), this._._offset_drawCalls + this._._size_drawCalls),
+    "meshes" / HeaderWithCount(Array(this.count, "Mesh" / Mesh), this._.materials.offset + this._.materials.size),
+    "drawCalls" / HeaderWithCount(Array(this.count, "DrawCall" / DrawCall), this._.meshes.offset + this._.meshes.size),
+    "ibufTable" / HeaderWithCount(Array(this.count, "Ibuf" / IbufHeader), this._.drawCalls.offset + this._.drawCalls.size),
     "ibufData" / Header(Bytes(this.size)),
-    "vbufTable" / HeaderWithCount(Array(this.count, "Vbuf" / VbufHeader), this._._offset_ibufTable + this._._size_ibufTable),
+    "vbufTable" / HeaderWithCount(Array(this.count, "Vbuf" / VbufHeader), this._.ibufTable.offset + this._.ibufTable.size),
     "vbufData" / Header(Bytes(this.size)),
     "nodesTable" / HeaderWithCount(Array(this.count, "Node" / NodeHeader), lambda ctx: 0),
     "nodesData" / Header(Bytes(this.size)),

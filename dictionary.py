@@ -214,7 +214,22 @@ class Dictionary(Construct):
         raise SizeofError(f"Dictionary doesn't support sizeof {path}")
 
     def toET(self, context, name=None, parent=None, is_root=False):
-        assert (0)
+        assert (name is not None)
+        assert (parent is not None)
+        if "_root" in context.keys():
+            outpath = context["_root"].get("_cons_xml_output_directory", "out")
+        else:
+            outpath = context.get("_cons_xml_output_directory", "out")
+
+        files = get_current_field(context, name)
+        for path, file in files.items():
+            fspath = os.path.join(outpath, path.replace("\\", os.sep).replace("\\\\", os.sep))
+            os.makedirs(os.path.dirname(fspath), exist_ok=True)
+            with open(fspath, "wb") as f:
+                f.write(file)
+                child = ET.Element("File")
+                child.attrib["path"] = path
+                parent.append(child)
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
         assert (0)
@@ -312,6 +327,8 @@ class FileDictionary(Dictionary):
                 child = ET.Element("File")
                 child.attrib["path"] = path
                 parent.append(child)
+
+        return None
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
         sector_size = self.sector_size(context) if callable(self.sector_size) else self.sector_size

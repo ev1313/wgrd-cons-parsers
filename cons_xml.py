@@ -557,6 +557,8 @@ Tell.toET = IgnoreCls_toET
 Tell.fromET = IgnoreCls_fromET
 Pass.toET = IgnoreCls_toET
 Pass.fromET = IgnoreCls_fromET
+Check.toET = IgnoreCls_toET
+Check.fromET = IgnoreCls_fromET
 
 
 def Pointer_toET(self, context, name=None, parent=None, is_root=False):

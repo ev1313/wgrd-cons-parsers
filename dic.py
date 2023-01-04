@@ -11,6 +11,9 @@ from io import BytesIO
 from cons_utils import *
 from cons_xml import *
 
+from common import *
+
+
 Dic = Struct(
     "magic" / Const(b"TRAD"),
     "count" / Rebuild(Int32ul, len_(this.entries)),
@@ -24,37 +27,5 @@ Dic = Struct(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--pack", action="store_true")
-    parser.add_argument("inputs", type=pathlib.Path, nargs='+', help="path to the input directory (pack) or file (unpack)")
-    parser.add_argument("-o", "--output", type=pathlib.Path, default="./out/", help="path to the output directory (unpack) / file (pack)")
-    args = parser.parse_args()
-
-    for input in args.inputs:
-        f = open(input, "rb")
-        data = f.read()
-        f.close()
-
-        if not args.pack:
-            sys.stderr.write("parsing dic...\n")
-            dic = Dic.parse(data)
-            sys.stderr.write("generating xml...\n")
-            xml = Dic.toET(dic, name="Dic", is_root=True)
-            sys.stderr.write("indenting xml...\n")
-            ET.indent(xml, space="  ", level=0)
-            str = ET.tostring(xml).decode("utf-8")
-            sys.stderr.write("writing xml...\n")
-            f = open(os.path.join(args.output, f"{os.path.basename(input)}.xml"), "wb")
-            f.write(str.encode("utf-8"))
-            f.close()
-        else:
-            assert(str(input).endswith(".dic.xml"))
-            xml = ET.fromstring(data.decode("utf-8"))
-            sys.stderr.write("rebuilding from xml...\n")
-            ctx, size = Dic.fromET(context={}, parent=xml, name="Dic", is_root=True)
-            sys.stderr.write("building dic...\n")
-            rebuilt_data = Dic.build(ctx)
-            sys.stderr.write("writing dic...\n")
-            f = open(os.path.join(args.output, f"{os.path.basename(str(input)[:-4])}"), "wb")
-            f.write(rebuilt_data)
-            f.close()
+    #FIXME: add extra options to respect extra arguments
+    commonMain(Dic, "Dic")

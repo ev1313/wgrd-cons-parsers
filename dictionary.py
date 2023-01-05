@@ -59,6 +59,9 @@ class Dictionary(Construct):
         size = self.size(context) if callable(self.size) else self.size
         ending = offset + size
 
+        if size == 0:
+            return {}
+
         def parsePath(f, path, ending):
             files = {}
             # FIXME: Use count instead?

@@ -197,6 +197,10 @@ class Dictionary(Construct):
         # The game expects a specific order
         sortedFilePaths = sorted(filePaths, key=dictionarySort)
 
+        sorted_obj = {}
+        for path in sortedFilePaths:
+            sorted_obj[path] = obj[path]
+
         # Create a trie while preserving order
         root = createTrie(sortedFilePaths)
 
@@ -209,10 +213,10 @@ class Dictionary(Construct):
         stream.write(data)
         self._dictionary_size = len(data)
 
-        self._allitems_build(obj, stream, **context)
+        self._allitems_build(sorted_obj, stream, **context)
 
         # FIXME: maybe just return correctly sorted dictionary
-        return obj
+        return sorted_obj
 
     def _sizeof(self, context, path):
         raise SizeofError(f"Dictionary doesn't support sizeof {path}")
@@ -280,7 +284,9 @@ class FileDictionary(Dictionary):
         sector_size = self.sector_size(ctx) if callable(self.sector_size) else self.sector_size
         # only for calculating the correct offsets
         aligned_size = len(data) if len(data) % sector_size == 0 else (int(len(data) / sector_size) + 1) * sector_size
-
+        #print(f"offset {self._current_offset}")
+        #print(f"size {len(data)}")
+        #print(f"aligned size {aligned_size}")
         ctx = {"offset": self._current_offset,
                "size": len(data),
                "checksum": hashlib.md5(data).digest()}
@@ -301,12 +307,19 @@ class FileDictionary(Dictionary):
         sector_size = self.sector_size(ctx) if callable(self.sector_size) else self.sector_size
         self.files = {}
         for path, header in self.dictitems.items():
+
             if enforce_alignment:
                 file = Pointer(offset_data + header.offset, Aligned(sector_size, Bytes(header.size))).parse_stream(stream)
             else:
                 file = Pointer(offset_data + header.offset, Bytes(header.size)).parse_stream(stream)
             assert(not path in self.files.keys())
             self.files[path] = file
+            #print(path)
+            #print(header.offset)
+            #print(header.size)
+            #print(header.checksum)
+            #print(hashlib.md5(file).digest())
+            #print(file[0:40])
 
             # WARNO has some files (ZZ_2.dat) which have apparently broken checksums
             # FIXME: investigate further
@@ -332,6 +345,11 @@ class FileDictionary(Dictionary):
         for path, data in obj.items():
             aligned_data = Aligned(sector_size, Bytes(len(data))).build(data)
             stream.write(aligned_data)
+            #print(data[0:100])
+            #print(path)
+            #print(f"length {len(data)}")
+            #print(f"aligned length {len(aligned_data)}")
+            #print(f"rebuild size {size}")
             size += len(aligned_data)
         self._data_size = size
 

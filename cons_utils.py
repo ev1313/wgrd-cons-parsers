@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 import xml.etree.ElementTree as ET
 from cons_xml import *
@@ -55,8 +56,46 @@ class ZlibCompressed(Adapter):
     def toET(self, context, name=None, parent=None):
         return Bytes_toET(self, context, name, parent)
 
-    def fromET(self, elem):
-        return Bytes_fromET(self, elem)
+    def fromET(self, context, parent, name, offset=0, is_root=False):
+        return Bytes_fromET(self, context=context, parent=parent, name=name, offset=offset, is_root=is_root)
+
+
+class File(Adapter):
+    def __init__(self, subcon, path):
+        super().__init__(subcon)
+        self._path = path
+
+    def _decode(self, obj, context, path):
+        p = evaluate(self._path, context)
+        if "_root" in context.keys():
+            outpath = context["_root"].get("_cons_xml_output_directory", "out")
+        else:
+            outpath = context.get("_cons_xml_output_directory", "out")
+        joined_path = os.path.join(outpath, p)
+        os.makedirs(os.path.dirname(joined_path), exist_ok=True)
+        f = open(joined_path, "wb")
+        assert(isinstance(obj, bytes))
+        f.write(obj)
+        f.close()
+        return joined_path
+
+    def _encode(self, obj, context, path):
+        if "_root" in context.keys():
+            inpath = context["_root"].get("_cons_xml_input_directory", "out")
+        else:
+            inpath = context.get("_cons_xml_input_directory", "out")
+
+        joined_path = os.path.join(inpath, obj)
+        f = open(joined_path, "rb")
+        data = f.read()
+        f.close()
+        return data
+
+    def toET(self, context, name=None, parent=None):
+        return StringEncoded_toET(self, context, name, parent)
+
+    def fromET(self, context, parent, name, offset=0, is_root=False):
+        return StringEncoded_fromET(self, context=context, parent=parent, name=name, offset=offset, is_root=is_root)
 
 
 class RepeatUntilSize(Subconstruct):

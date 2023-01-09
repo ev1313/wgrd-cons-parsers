@@ -26,9 +26,10 @@ def commonMain(structure, structureName):
 
         if not args.pack:
             sys.stderr.write("parsing %s...\n" % structureName)
-            object = structure.parse(data)
+            ctx = structure.parse(data)
             sys.stderr.write("generating xml...\n")
-            xml = structure.toET(object, name=structureName, is_root=True)
+            ctx["_cons_xml_output_directory"] = args.output
+            xml = structure.toET(ctx, name=structureName, is_root=True)
             sys.stderr.write("indenting xml...\n")
             ET.indent(xml, space="  ", level=0)
             s = ET.tostring(xml).decode("utf-8")
@@ -40,7 +41,8 @@ def commonMain(structure, structureName):
             assert(str(input).endswith(extName))
             xml = ET.fromstring(data.decode("utf-8"))
             sys.stderr.write("rebuilding from xml...\n")
-            ctx, size = structure.fromET(context={}, parent=xml, name=structureName, is_root=True)
+            ctx = {"_cons_xml_input_directory": os.path.dirname(input)}
+            ctx, size = structure.fromET(context=ctx, parent=xml, name=structureName, is_root=True)
             sys.stderr.write("building %s...\n" % structureName)
             rebuilt_data = structure.build(ctx)
             sys.stderr.write("writing %s...\n" % structureName)

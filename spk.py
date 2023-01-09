@@ -113,7 +113,7 @@ IbufHeader = Struct(
     "count" / Int32ul,
     "unk1" / Const(0x1, Int16ul),
     "compressed" / Enum(Int16ul, uncompressed=0x0, compressed=0xC000),
-    "data" / Pointer(this.offset, Bytes(this.size))
+    "data" / Pointer(this.offset, File(Bytes(this.size), lambda ctx: f"ibufs/ibuf_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin"))
 )
 
 VbufHeader = Struct(
@@ -122,7 +122,7 @@ VbufHeader = Struct(
     "count" / Int32ul,
     "vertexFormatIndex" / Int16ul,
     "compressed" / Enum(Int16ul, uncompressed=0x0, compressed=0xC000),
-    "data" / Pointer(this.offset, Bytes(this.size))
+    "data" / Pointer(this.offset, File(Bytes(this.size), lambda ctx: f"vbufs/vbuf_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin"))
 )
 
 NodeHeader = Struct(
@@ -140,7 +140,7 @@ Spk = Struct(
     "block2" / EmptyHeaderWithCount,
     "files" / HeaderWithCount(Dictionary("FileItem" / FileItem, this.offset, this.size), this._._endoffset_unknown10indices),
     "vertexFormats" / VertexFormatHeader,
-    "materials" / HeaderWithCount(Bytes(this.size), this._.vertexFormats.offset + this._.vertexFormats.size),
+    "materials" / HeaderWithCount(File(Bytes(this.size), lambda ctx: "materials.ndfbin"), this._.vertexFormats.offset + this._.vertexFormats.size),
     "unknown0" / HeaderWithCount(Array(this.count, Unknown0), this._.materials.offset + this._.materials.size),
     "unknown1" / HeaderWithCount(Array(this.count, Unknown1), this._.unknown0.offset + this._.unknown0.size),
     "meshes" / HeaderWithCount(Array(this.count, "Mesh" / Mesh), this._.unknown1.offset + this._.unknown1.size),

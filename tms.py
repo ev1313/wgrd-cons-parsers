@@ -196,4 +196,5 @@ TMSG = Struct(
 #TMSG = Debugger(TMSG)
 
 if __name__ == "__main__":
-    CommonMain(TMSG, "TMSG")
+    main = CommonMain(TMSG, "TMSG")
+    main.main()

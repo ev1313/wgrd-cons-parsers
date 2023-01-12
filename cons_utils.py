@@ -77,7 +77,7 @@ class File(Adapter):
         assert(isinstance(obj, bytes))
         f.write(obj)
         f.close()
-        return joined_path
+        return p
 
     def _encode(self, obj, context, path):
         if "_root" in context.keys():
@@ -95,6 +95,7 @@ class File(Adapter):
         return StringEncoded_toET(self, context, name, parent)
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
+        self.encoding = "utf-8"
         return StringEncoded_fromET(self, context=context, parent=parent, name=name, offset=offset, is_root=is_root)
 
 

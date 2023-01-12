@@ -29,4 +29,5 @@ SFormat = Struct(
     )
 
 if __name__ == "__main__":
-    CommonMain(SFormat, "SFormat")
+    main = CommonMain(SFormat, "SFormat")
+    main.main()

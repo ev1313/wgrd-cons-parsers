@@ -78,4 +78,5 @@ Skeleton = Struct(
 
 
 if __name__ == "__main__":
-    CommonMain(Skeleton, "Skeleton")
+    main = CommonMain(Skeleton, "Skeleton")
+    main.main()

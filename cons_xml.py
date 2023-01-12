@@ -380,11 +380,14 @@ def StringEncoded_fromET(self, context, parent, name, offset=0, is_root=False):
     elif isinstance(self.subcon, NullTerminated):
         # CString
         pass
-    elif isinstance(self.subcon, GreedyBytes):
+    elif self.subcon.__class__ == "GreedyBytes":
         # GreedyString
+        pass
+    elif isinstance(self.subcon, Bytes):
         pass
     else:
         # unknown, check if size needs to be adjusted
+        pdb.set_trace()
         assert(0)
 
     ctx = insert_or_append_field(context, name, elem)

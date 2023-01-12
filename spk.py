@@ -153,7 +153,6 @@ Spk = Struct(
     "nodesData" / EmptyHeader,
     "unknown10" / HeaderWithCount(Bytes(this.size), this._.nodesTable.offset + this._.nodesTable.size),
     "unknown10indices" / HeaderWithCount(Bytes(this.size), this._.unknown10.offset + this._.unknown10.size),
-    Probe(),
 )
 
 if __name__ == "__main__":

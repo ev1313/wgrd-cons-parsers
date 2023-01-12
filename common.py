@@ -9,14 +9,15 @@ import sys
 
 from cons_xml import *
 
+
 class CommonMain:
     def __init__(self, subcon, sc_name):
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument("-p", "--pack", action="store_true")
         self.parser.add_argument("inputs", type=pathlib.Path, nargs='+',
-                            help="path to the input directory (pack) or file (unpack)")
+                                 help="path to the input directory (pack) or file (unpack)")
         self.parser.add_argument("-o", "--output", type=pathlib.Path, default="./out/",
-                            help="path to the output directory (unpack) / file (pack)")
+                                 help="path to the output directory (unpack) / file (pack)")
 
         self.subcon = subcon
         self.sc_name = sc_name
@@ -31,15 +32,19 @@ class CommonMain:
 
         return extra_args
 
+    def get_data(self, input):
+        f = open(input, "rb")
+        data = f.read()
+        f.close()
+        return data
+
     def parse(self):
         self.args = self.parser.parse_args()
 
     def main(self):
         self.parse()
         for input in self.args.inputs:
-            f = open(input, "rb")
-            data = f.read()
-            f.close()
+            data = self.get_data(input)
 
             if not self.args.pack:
                 sys.stderr.write("parsing %s...\n" % self.sc_name)
@@ -65,4 +70,3 @@ class CommonMain:
                 f = open(os.path.join(self.args.output, f"{os.path.basename(str(input)[:-4])}"), "wb")
                 f.write(rebuilt_data)
                 f.close()
-

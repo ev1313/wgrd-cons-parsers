@@ -43,9 +43,9 @@ class CommonMain:
 
             if not self.args.pack:
                 sys.stderr.write("parsing %s...\n" % self.sc_name)
-                ctx = self.subcon.parse(data)
+                ctx = self.add_extra_args(input)
+                ctx = self.subcon.parse(data, **ctx)
                 sys.stderr.write("generating xml...\n")
-                ctx = self.add_extra_args(input, ctx)
                 xml = self.subcon.toET(ctx, name=self.sc_name, is_root=True)
                 sys.stderr.write("indenting xml...\n")
                 ET.indent(xml, space="  ", level=0)
@@ -55,7 +55,6 @@ class CommonMain:
                 f.write(s.encode("utf-8"))
                 f.close()
             else:
-                assert (str(input).endswith(self.extName))
                 xml = ET.fromstring(data.decode("utf-8"))
                 sys.stderr.write("rebuilding from xml...\n")
                 ctx = self.add_extra_args(input)

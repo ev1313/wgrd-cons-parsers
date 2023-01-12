@@ -14,6 +14,8 @@ from cons_xml import *
 from compress_ndfbin import compress_ndfbin
 from decompress_ndfbin import decompress_ndfbin
 
+from common import CommonMain
+
 NDFType = Struct(
     "typeId" / Rebuild(Int32ul, this._switchid_data),
     "data" / Switch(this.typeId, {
@@ -257,41 +259,6 @@ NdfBin = Struct(
     "toc0header" / Pointer(this.toc0offset, TOC0Header),
     )
 
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--pack", action="store_true")
-    parser.add_argument("inputs", type=pathlib.Path, nargs='+', help="path to the input directory (pack) or file (unpack)")
-    parser.add_argument("-o", "--output", type=pathlib.Path, default="./out/", help="path to the output directory (unpack) / file (pack)")
-    args = parser.parse_args()
-
-    for input in args.inputs:
-        f = open(input, "rb")
-        data = f.read()
-        f.close()
-
-        if not args.pack:
-            data = decompress_ndfbin(data)
-            sys.stderr.write("parsing NdfBin...\n")
-            ndfbin = NdfBin.parse(data)
-            sys.stderr.write("generating xml...\n")
-            xml = NdfBin.toET(ndfbin, name="NdfBin", is_root=True)
-            sys.stderr.write("indenting xml...\n")
-            ET.indent(xml, space="  ", level=0)
-            str = ET.tostring(xml).decode("utf-8")
-            sys.stderr.write("writing xml...\n")
-            f = open(os.path.join(args.output, f"{os.path.basename(input)}.xml"), "wb")
-            f.write(str.encode("utf-8"))
-            f.close()
-        else:
-            assert(str(input).endswith(".ndfbin.xml"))
-            xml = ET.fromstring(data.decode("utf-8"))
-            sys.stderr.write("rebuilding from xml...\n")
-            xml_rebuild, size = NdfBin.fromET(context={}, parent=xml, name="NdfBin", is_root=True)
-            sys.stderr.write("building ndfbin...\n")
-            rebuilt_data = NdfBin.build(xml_rebuild)
-            sys.stderr.write("writing ndfbin...\n")
-            f = open(os.path.join(args.output, f"{os.path.basename(str(input)[:-4])}"), "wb")
-            rebuilt_data = compress_ndfbin(rebuilt_data)
-            f.write(rebuilt_data)
-            f.close()
+    main = CommonMain(NdfBin, "NdfBin")
+    main.main()

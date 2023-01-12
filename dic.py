@@ -27,5 +27,5 @@ Dic = Struct(
 
 
 if __name__ == "__main__":
-    #FIXME: add extra options to respect extra arguments
-    commonMain(Dic, "Dic")
+    main = CommonMain(Dic, "Dic")
+    main.main()

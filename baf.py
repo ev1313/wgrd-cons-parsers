@@ -77,4 +77,5 @@ Baf = Struct(
 #Baf = Debugger(Baf)
 
 if __name__ == "__main__":
-    commonMain(Baf, "Baf")
+    main = CommonMain(Baf, "Baf")
+    main.main()

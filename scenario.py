@@ -116,4 +116,4 @@ Scenario = Struct(
 )
 
 if __name__ == "__main__":
-    commonMain(Scenario, "Scenario")
+    CommonMain(Scenario, "Scenario")

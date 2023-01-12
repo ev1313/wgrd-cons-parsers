@@ -157,4 +157,5 @@ Spk = Struct(
 )
 
 if __name__ == "__main__":
-    commonMain(Spk, "Spk")
+    main = CommonMain(Spk, "Spk")
+    main.main()

@@ -424,4 +424,5 @@ Boobs = Struct(
 
 
 if __name__ == "__main__":
-    commonMain(Boobs, "Boobs")
+    main = CommonMain(Boobs, "Boobs")
+    main.main()

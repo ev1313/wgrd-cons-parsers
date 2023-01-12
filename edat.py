@@ -36,6 +36,19 @@ EDat = Struct(
     #"data" /
 )
 
+class EdatMain(CommonMain):
+    def parse(self):
+        self.parser.add_argument("-c", "--compat", action="store_true",
+                            help="compatibility mode for enokhas ModdingSuite, which doesn't align the files correctly")
+        self.parser.add_argument("--disable-checks", action="store_true",
+                            help="compatibility mode for some WARNO files, which seem to have broken checksums")
+        super().parse()
+
+    def add_extra_args(self, input, ctx={}):
+        ctx = {"_cons_xml_filesdictionary_alignment": not args.compat,
+                   "_cons_xml_filesdictionary_disable_checks": args.disable_checks}
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--pack", action="store_true")

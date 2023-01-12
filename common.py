@@ -9,43 +9,61 @@ import sys
 
 from cons_xml import *
 
+class CommonMain:
+    def __init__(self, subcon, sc_name):
+        self.parser = argparse.ArgumentParser()
+        self.parser.add_argument("-p", "--pack", action="store_true")
+        self.parser.add_argument("inputs", type=pathlib.Path, nargs='+',
+                            help="path to the input directory (pack) or file (unpack)")
+        self.parser.add_argument("-o", "--output", type=pathlib.Path, default="./out/",
+                            help="path to the output directory (unpack) / file (pack)")
 
-def commonMain(structure, structureName):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--pack", action="store_true")
-    parser.add_argument("inputs", type=pathlib.Path, nargs='+', help="path to the input directory (pack) or file (unpack)")
-    parser.add_argument("-o", "--output", type=pathlib.Path, default="./out/", help="path to the output directory (unpack) / file (pack)")
-    args = parser.parse_args()
+        self.subcon = subcon
+        self.sc_name = sc_name
+        self.extName = ".%s.xml" % sc_name.lower()
 
-    extName = ".%s.xml" % structureName.lower()
-
-    for input in args.inputs:
-        f = open(input, "rb")
-        data = f.read()
-        f.close()
-
-        if not args.pack:
-            sys.stderr.write("parsing %s...\n" % structureName)
-            ctx = structure.parse(data)
-            sys.stderr.write("generating xml...\n")
-            ctx["_cons_xml_output_directory"] = args.output
-            xml = structure.toET(ctx, name=structureName, is_root=True)
-            sys.stderr.write("indenting xml...\n")
-            ET.indent(xml, space="  ", level=0)
-            s = ET.tostring(xml).decode("utf-8")
-            sys.stderr.write("writing xml...\n")
-            f = open(os.path.join(args.output, f"{os.path.basename(input)}.xml"), "wb")
-            f.write(s.encode("utf-8"))
-            f.close()
+    def add_extra_args(self, input, ctx={}):
+        extra_args = ctx
+        if self.args.pack:
+            extra_args["_cons_xml_input_directory"] = os.path.dirname(input)
         else:
-            assert(str(input).endswith(extName))
-            xml = ET.fromstring(data.decode("utf-8"))
-            sys.stderr.write("rebuilding from xml...\n")
-            ctx = {"_cons_xml_input_directory": os.path.dirname(input)}
-            ctx, size = structure.fromET(context=ctx, parent=xml, name=structureName, is_root=True)
-            sys.stderr.write("building %s...\n" % structureName)
-            rebuilt_data = structure.build(ctx)
-            sys.stderr.write("writing %s...\n" % structureName)
-            f = open(os.path.join(args.output, f"{os.path.basename(str(input)[:-4])}"), "wb")
-            f.write(rebuilt_data)
+            extra_args["_cons_xml_output_directory"] = self.args.output
+
+        return extra_args
+
+    def parse(self):
+        self.args = self.parser.parse_args()
+
+    def main(self):
+        self.parse()
+        for input in self.args.inputs:
+            f = open(input, "rb")
+            data = f.read()
             f.close()
+
+            if not self.args.pack:
+                sys.stderr.write("parsing %s...\n" % self.sc_name)
+                ctx = self.subcon.parse(data)
+                sys.stderr.write("generating xml...\n")
+                ctx = self.add_extra_args(input, ctx)
+                xml = self.subcon.toET(ctx, name=self.sc_name, is_root=True)
+                sys.stderr.write("indenting xml...\n")
+                ET.indent(xml, space="  ", level=0)
+                s = ET.tostring(xml).decode("utf-8")
+                sys.stderr.write("writing xml...\n")
+                f = open(os.path.join(self.args.output, f"{os.path.basename(input)}.xml"), "wb")
+                f.write(s.encode("utf-8"))
+                f.close()
+            else:
+                assert (str(input).endswith(self.extName))
+                xml = ET.fromstring(data.decode("utf-8"))
+                sys.stderr.write("rebuilding from xml...\n")
+                ctx = self.add_extra_args(input)
+                ctx, size = self.subcon.fromET(context=ctx, parent=xml, name=self.sc_name, is_root=True)
+                sys.stderr.write("building %s...\n" % self.sc_name)
+                rebuilt_data = self.subcon.build(ctx)
+                sys.stderr.write("writing %s...\n" % self.sc_name)
+                f = open(os.path.join(self.args.output, f"{os.path.basename(str(input)[:-4])}"), "wb")
+                f.write(rebuilt_data)
+                f.close()
+

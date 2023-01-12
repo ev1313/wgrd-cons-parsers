@@ -22,4 +22,5 @@ Ess = Struct(
 )
 
 if __name__ == "__main__":
-    commonMain(Ess, "Ess")
+    main = CommonMain(Ess, "Ess")
+    main.main()

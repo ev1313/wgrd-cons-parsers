@@ -78,4 +78,4 @@ Skeleton = Struct(
 
 
 if __name__ == "__main__":
-    commonMain(Skeleton, "Skeleton")
+    CommonMain(Skeleton, "Skeleton")

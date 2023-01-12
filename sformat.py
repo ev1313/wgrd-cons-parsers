@@ -29,4 +29,4 @@ SFormat = Struct(
     )
 
 if __name__ == "__main__":
-    commonMain(SFormat, "SFormat")
+    CommonMain(SFormat, "SFormat")

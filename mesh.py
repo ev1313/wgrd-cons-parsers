@@ -84,4 +84,4 @@ Mesh = Struct(
 
 
 if __name__ == "__main__":
-    commonMain(Mesh, "Mesh")
+    CommonMain(Mesh, "Mesh")

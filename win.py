@@ -347,4 +347,4 @@ Win = Struct(
 #Win = Debugger(Win)
 
 if __name__ == "__main__":
-    commonMain(Win, "Win")
+    CommonMain(Win, "Win")

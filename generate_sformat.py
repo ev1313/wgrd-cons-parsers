@@ -14,13 +14,12 @@ if __name__ == "__main__":
     sformat = Container(
               isShort="true",
               channelCount=ess_header.channels,
-              unk3=512,
+              unk3=channelCount*0x200,
               samplerate=ess_header.samplerate,
               frameCount=ess_header.frameCount,
               length=2,
               essLength=len(essdata),
               essUnk2=0,
-              frameCount2=ess_header.frameCount,
               data=None)
 
     sformatdata = SFormat.build(sformat)

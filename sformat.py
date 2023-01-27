@@ -11,12 +11,12 @@ SFormat = Struct(
     "isShort" / Enum(Int8ul, false=0, true=1),
     "channelCount" / Int8ul,
     "unk3" / Int16ul, # channelCount * 0x200
-    "samplerate" / Int16ub,
+    "samplerate" / Int16ul,
     "frameCount" / Int32ul,
     "length" / Int32ul,
-    "sformatLength" / Int32ul,
-    "sformatUnk2" / Int32ul,
-    "frameCount2" / Int32ul,
+    "essLength" / Int32ul,
+    "essUnk2" / Int32ul,
+    "frameCount2" / Rebuild(Int32ul, this.frameCount),
     "data" / If(lambda ctx: ctx.isShort == "false",
                Struct(
                    "unkCount" / Int32ul,

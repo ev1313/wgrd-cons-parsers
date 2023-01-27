@@ -15,7 +15,7 @@ Ess = Struct(
     "samplerate" / Int16ub,
     "frameCount" / Int32ub,
     "pad" / Const(b"\x00"*4),
-    "samplecount2" / Int32ub,
+    "frameCount2" / Int32ub,
     "sampleoffsets" / RepeatUntil(lambda obj,lst,ctx: obj == 0, Int32ub),
     "padding" / Const(b"\x00"*16),
     "framedata" / GreedyBytes,

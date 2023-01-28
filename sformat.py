@@ -16,7 +16,8 @@ SFormat = Struct(
     "length" / Int32ul,
     "essLength" / Int32ul,
     "essUnk2" / Int32ul,
-    "frameCount2" / Rebuild(Int32ul, this.frameCount),
+              frameCount=ess_header.frameCount,
+    "frameCount2" / Int32ul,
     "data" / If(lambda ctx: ctx.isShort == "false",
                Struct(
                    "unkCount" / Int32ul,

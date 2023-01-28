@@ -20,6 +20,7 @@ if __name__ == "__main__":
               length=2,
               essLength=len(essdata),
               essUnk2=0,
+              frameCount2=ess_header.frameCount,
               data=None)
 
     sformatdata = SFormat.build(sformat)

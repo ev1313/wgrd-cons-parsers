@@ -706,6 +706,12 @@ GreedyRange.toET = GenericList_toET
 GreedyRange.fromET = GenericList_fromET
 
 
+def Lazy_toET(self, context, name=None, parent=None, is_root=False):
+    sc = self.subcon
+    context[name] = context[name]()
+    return sc.toET(context=context, name=name, parent=parent)
+
+
 def LazyBound_toET(self, context, name=None, parent=None, is_root=False):
     sc = self.subconfunc()
     return sc.toET(context=context, name=name, parent=parent)

@@ -80,6 +80,9 @@ class File(Adapter):
         return p
 
     def _encode(self, obj, context, path):
+        if isinstance(obj, bytes):
+            return obj
+
         if "_root" in context.keys():
             inpath = context["_root"].get("_cons_xml_input_directory", "out")
         else:
@@ -95,8 +98,20 @@ class File(Adapter):
         return StringEncoded_toET(self, context, name, parent)
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
+        if "_root" in context.keys():
+            inpath = context["_root"].get("_cons_xml_input_directory", "out")
+        else:
+            inpath = context.get("_cons_xml_input_directory", "out")
+
         self.encoding = "utf-8"
-        return StringEncoded_fromET(self, context=context, parent=parent, name=name, offset=offset, is_root=is_root)
+        ctx, size = StringEncoded_fromET(self, context=context, parent=parent, name=name, offset=offset, is_root=is_root)
+        path = ctx[name]
+        p = os.path.join(inpath, path)
+        f = open(p, "rb")
+        ctx[name] = f.read()
+        f.close()
+        return ctx, os.stat(p).st_size
+
 
 
 class RepeatUntilSize(Subconstruct):

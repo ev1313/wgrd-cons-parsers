@@ -25,10 +25,8 @@ class CommonMain:
 
     def add_extra_args(self, input, ctx={}):
         extra_args = ctx
-        if self.args.pack:
-            extra_args["_cons_xml_input_directory"] = os.path.dirname(input)
-        else:
-            extra_args["_cons_xml_output_directory"] = self.args.output
+        extra_args["_cons_xml_input_directory"] = os.path.dirname(input)
+        extra_args["_cons_xml_output_directory"] = self.args.output
 
         return extra_args
 
@@ -50,12 +48,14 @@ class CommonMain:
                 sys.stderr.write("parsing %s...\n" % self.sc_name)
                 ctx = self.add_extra_args(input)
                 ctx = self.subcon.parse(data, **ctx)
+                ctx = ctx | self.add_extra_args(input)
                 sys.stderr.write("generating xml...\n")
                 xml = self.subcon.toET(ctx, name=self.sc_name, is_root=True)
                 sys.stderr.write("indenting xml...\n")
                 ET.indent(xml, space="  ", level=0)
                 s = ET.tostring(xml).decode("utf-8")
                 sys.stderr.write("writing xml...\n")
+                os.makedirs(self.args.output, exist_ok=True)
                 f = open(os.path.join(self.args.output, f"{os.path.basename(input)}.xml"), "wb")
                 f.write(s.encode("utf-8"))
                 f.close()

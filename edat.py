@@ -53,5 +53,5 @@ class EdatMain(CommonMain):
 
 
 if __name__ == "__main__":
-    main = CommonMain(EDat, "EDat")
+    main = EdatMain(EDat, "EDat")
     main.main()

@@ -16,9 +16,9 @@ Ess = Struct(
     "frameCount" / Int32ub,
     "pad" / Const(b"\x00"*4),
     "frameCount2" / Int32ub,
-    "sampleoffsets" / RepeatUntil(lambda obj,lst,ctx: obj == 0, Int32ub),
+    "blockOffsets" / RepeatUntil(lambda obj,lst,ctx: obj == 0, Int32ub),
     "padding" / Const(b"\x00"*16),
-    "framedata" / GreedyBytes,
+    "blockData" / GreedyBytes,
 )
 
 if __name__ == "__main__":

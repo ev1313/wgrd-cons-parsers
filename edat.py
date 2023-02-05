@@ -40,15 +40,15 @@ EDat = Struct(
 
 class EdatMain(CommonMain):
     def parse(self):
-        self.parser.add_argument("-c", "--compat", action="store_true",
-                            help="compatibility mode for enokhas ModdingSuite, which doesn't align the files correctly")
-        self.parser.add_argument("--disable-checks", action="store_true",
-                            help="compatibility mode for some WARNO files, which seem to have broken checksums")
+        self.parser.add_argument("-c", "--no-alignment", action="store_true",
+                            help="don't check for correct alignment when reading files (just use the offsets)")
+        self.parser.add_argument("-d", "--disable-checksums", action="store_true",
+                            help="don't check for correct checksums of the files")
         super().parse()
 
     def add_extra_args(self, input, ctx={}):
-        ctx = ctx | {"_cons_xml_filesdictionary_alignment": not args.compat,
-                     "_cons_xml_filesdictionary_disable_checks": args.disable_checks}
+        ctx = ctx | {"_cons_xml_filesdictionary_alignment": not self.args.no_alignment,
+                     "_cons_xml_filesdictionary_disable_checks": self.args.disable_checksums}
         return super().add_extra_args(input, ctx)
 
 

@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wgrd-cons-parsers"
+authors = [
+    {name = "End", email = "wgrdcons@3nd.io"},
+]
+description="Tools for working with the game files of the game Wargame: Red Dragon"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "construct",
+    'pytest',
+]

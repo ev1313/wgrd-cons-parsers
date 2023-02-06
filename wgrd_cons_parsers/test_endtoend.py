@@ -2,8 +2,8 @@
 
 import pytest
 
-from cons_xml import *
-from cons_utils import *
+from .cons_xml import *
+from .cons_utils import *
 
 
 def test_xml_simple():

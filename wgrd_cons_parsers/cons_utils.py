@@ -1,7 +1,7 @@
 import os
 from io import BytesIO
 import xml.etree.ElementTree as ET
-from cons_xml import *
+from .cons_xml import *
 import zlib
 from functools import partial
 import itertools

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from cons_utils import *
-from cons_xml import *
+from .cons_utils import *
+from .cons_xml import *
 
-from common import *
+from .common import *
 
-from skeleton import Skeleton
+from .skeleton import Skeleton
 
 Baf = Struct(
     "unk0" / Int32ul,

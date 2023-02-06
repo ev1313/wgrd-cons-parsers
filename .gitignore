@@ -10,3 +10,4 @@ spk_out.txt
 output.log
 venv/
 dist
+*.egg-info

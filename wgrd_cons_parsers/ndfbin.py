@@ -8,13 +8,13 @@ import argparse
 import pathlib
 from io import BytesIO
 
-from cons_utils import *
-from cons_xml import *
+from .cons_utils import *
+from .cons_xml import *
 
-from compress_ndfbin import compress_ndfbin
-from decompress_ndfbin import decompress_ndfbin
+from .compress_ndfbin import compress_ndfbin
+from .decompress_ndfbin import decompress_ndfbin
 
-from common import CommonMain
+from .common import CommonMain
 
 NDFType = Struct(
     "typeId" / Rebuild(Int32ul, this._switchid_data),

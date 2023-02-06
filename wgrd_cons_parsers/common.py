@@ -7,7 +7,7 @@ import pathlib
 from io import BytesIO
 import sys
 
-from cons_xml import *
+from .cons_xml import *
 
 
 class CommonMain:

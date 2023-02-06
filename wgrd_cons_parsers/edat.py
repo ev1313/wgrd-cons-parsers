@@ -8,11 +8,11 @@ import argparse
 import pathlib
 from io import BytesIO
 
-from cons_utils import *
-from cons_xml import *
-from dictionary import *
+from .cons_utils import *
+from .cons_xml import *
+from .dictionary import *
 
-from common import CommonMain
+from .common import CommonMain
 
 EDatFileHeader = Struct(
     "offset" / Int32ul,

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from cons_utils import *
-from cons_xml import *
+from .cons_utils import *
+from .cons_xml import *
 
-from common import *
+from .common import *
 
 Matrix3x4 = Struct(
     "row0" / Array(4, Float32l),

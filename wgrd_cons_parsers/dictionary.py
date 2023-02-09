@@ -103,8 +103,12 @@ class Dictionary(Construct):
 
         # Read header
         unk0 = Int32ul.parse_stream(stream)
-        assert (unk0 == 0xA)  # Probably header size
+        assert (unk0 in [0x01, 0xA])
         assert (stream.read(6) == b'\x00' * 6)
+
+        # empty dict
+        if unk0 == 0x01:
+            return {}
 
         # Start recursion
         self.dictitems = parsePath(stream, [], ending)

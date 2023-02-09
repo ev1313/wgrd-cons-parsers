@@ -43,11 +43,11 @@ class CommonMain:
             self.args = self.parser.parse_args()
 
     def unpack(self, input, data):
-        sys.stderr.write("parsing %s...\n" % self.sc_name)
+        sys.stderr.write(f"parsing {self.sc_name} {input}\n")
         ctx = self.add_extra_args(input)
         ctx = self.subcon.parse(data, **ctx)
         ctx = ctx | self.add_extra_args(input)
-        sys.stderr.write("generating xml...\n")
+        sys.stderr.write(f"generating xml...\n")
         xml = self.subcon.toET(ctx, name=self.sc_name, is_root=True)
         sys.stderr.write("indenting xml...\n")
         ET.indent(xml, space="  ", level=0)
@@ -76,6 +76,6 @@ class CommonMain:
             data = self.get_data(input)
 
             if not self.args.pack:
-                self.unpack(data)
+                self.unpack(input, data)
             else:
-                self.pack(data)
+                self.pack(input, data)

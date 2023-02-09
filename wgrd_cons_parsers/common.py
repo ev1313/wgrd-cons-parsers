@@ -36,37 +36,46 @@ class CommonMain:
         f.close()
         return data
 
-    def parse(self):
-        self.args = self.parser.parse_args()
+    def parse(self, args=None):
+        if args:
+            self.args = self.parser.parse_args(args)
+        else:
+            self.args = self.parser.parse_args()
 
-    def main(self):
-        self.parse()
+    def unpack(self, input, data):
+        sys.stderr.write("parsing %s...\n" % self.sc_name)
+        ctx = self.add_extra_args(input)
+        ctx = self.subcon.parse(data, **ctx)
+        ctx = ctx | self.add_extra_args(input)
+        sys.stderr.write("generating xml...\n")
+        xml = self.subcon.toET(ctx, name=self.sc_name, is_root=True)
+        sys.stderr.write("indenting xml...\n")
+        ET.indent(xml, space="  ", level=0)
+        s = ET.tostring(xml).decode("utf-8")
+        sys.stderr.write("writing xml...\n")
+        os.makedirs(self.args.output, exist_ok=True)
+        f = open(os.path.join(self.args.output, f"{os.path.basename(input)}.xml"), "wb")
+        f.write(s.encode("utf-8"))
+        f.close()
+    
+    def pack(self, input, data):
+        xml = ET.fromstring(data.decode("utf-8"))
+        sys.stderr.write("rebuilding from xml...\n")
+        ctx = self.add_extra_args(input)
+        ctx, size = self.subcon.fromET(context=ctx, parent=xml, name=self.sc_name, is_root=True)
+        sys.stderr.write("building %s...\n" % self.sc_name)
+        rebuilt_data = self.subcon.build(ctx)
+        sys.stderr.write("writing %s...\n" % self.sc_name)
+        f = open(os.path.join(self.args.output, f"{os.path.basename(str(input)[:-4])}"), "wb")
+        f.write(rebuilt_data)
+        f.close()
+
+    def main(self, args=None):
+        self.parse(args)
         for input in self.args.inputs:
             data = self.get_data(input)
 
             if not self.args.pack:
-                sys.stderr.write("parsing %s...\n" % self.sc_name)
-                ctx = self.add_extra_args(input)
-                ctx = self.subcon.parse(data, **ctx)
-                ctx = ctx | self.add_extra_args(input)
-                sys.stderr.write("generating xml...\n")
-                xml = self.subcon.toET(ctx, name=self.sc_name, is_root=True)
-                sys.stderr.write("indenting xml...\n")
-                ET.indent(xml, space="  ", level=0)
-                s = ET.tostring(xml).decode("utf-8")
-                sys.stderr.write("writing xml...\n")
-                os.makedirs(self.args.output, exist_ok=True)
-                f = open(os.path.join(self.args.output, f"{os.path.basename(input)}.xml"), "wb")
-                f.write(s.encode("utf-8"))
-                f.close()
+                self.unpack(data)
             else:
-                xml = ET.fromstring(data.decode("utf-8"))
-                sys.stderr.write("rebuilding from xml...\n")
-                ctx = self.add_extra_args(input)
-                ctx, size = self.subcon.fromET(context=ctx, parent=xml, name=self.sc_name, is_root=True)
-                sys.stderr.write("building %s...\n" % self.sc_name)
-                rebuilt_data = self.subcon.build(ctx)
-                sys.stderr.write("writing %s...\n" % self.sc_name)
-                f = open(os.path.join(self.args.output, f"{os.path.basename(str(input)[:-4])}"), "wb")
-                f.write(rebuilt_data)
-                f.close()
+                self.pack(data)

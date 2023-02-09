@@ -39,12 +39,15 @@ EDat = Struct(
 )
 
 class EdatMain(CommonMain):
-    def parse(self):
+    def __init__(self):
+        super().__init__(EDat, "EDat")
+
+    def parse(self, args=None):
         self.parser.add_argument("-c", "--no-alignment", action="store_true",
                             help="don't check for correct alignment when reading files (just use the offsets)")
         self.parser.add_argument("-d", "--disable-checksums", action="store_true",
                             help="don't check for correct checksums of the files")
-        super().parse()
+        super().parse(args)
 
     def add_extra_args(self, input, ctx={}):
         ctx = ctx | {"_cons_xml_filesdictionary_alignment": not self.args.no_alignment,
@@ -53,5 +56,5 @@ class EdatMain(CommonMain):
 
 
 if __name__ == "__main__":
-    main = EdatMain(EDat, "EDat")
+    main = EdatMain()
     main.main()

@@ -10,7 +10,4 @@ spk_out.txt
 output.log
 venv/
 dist
-<<<<<<< HEAD
 *.egg-info
-=======
->>>>>>> b603ef0 (python deployment stuff)

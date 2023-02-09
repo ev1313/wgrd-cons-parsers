@@ -2,7 +2,7 @@
 
 import sys
 import pdb
-from cons_utils import *
+from .cons_utils import *
 
 
 def decompress_ndfbin(data):

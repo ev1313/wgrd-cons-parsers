@@ -2,8 +2,8 @@
 
 import pytest
 
-from cons_xml import *
-from cons_utils import *
+from .cons_xml import *
+from .cons_utils import *
 
 
 def test_formatfield():
@@ -243,6 +243,24 @@ def test_focuseseq():
     assert (size == 12)
     assert (ctx["test"] == "foobarbaz")
     assert (ctx["foo"] == 5)
+
+def test_rebuild():
+    T = Struct("foo" / Int32ul,
+               "one" / Rebuild(Int32ul, this.foo),
+               "two" / Rebuild(Int32ul, lambda ctx: ctx.one)
+        )
+
+    parent = ET.Element("parent")
+    child = ET.Element("foo")
+    child.attrib["foo"] = "5"
+    parent.append(child)
+    ctx = {"test": "foobarbaz"}
+    ctx, size = T.fromET(context=ctx, parent=parent, name="foo", offset=13)
+    assert (size == 12)
+    assert (ctx["test"] == "foobarbaz")
+    assert (ctx["foo"]["foo"] == 5)
+    assert (ctx["foo"]["one"] == None)
+    assert (ctx["foo"]["two"] == None)
 
 def test_prefixedarray_struct_nested():
     T = Struct("foo" / Int32ul,

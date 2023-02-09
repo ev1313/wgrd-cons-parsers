@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from cons_utils import *
-from cons_xml import *
+from .cons_utils import *
+from .cons_xml import *
 
-from common import *
+from .common import *
 
 BBOX = Struct(
     "a1" / Int32ul, # Probably float!
@@ -347,4 +347,5 @@ Win = Struct(
 #Win = Debugger(Win)
 
 if __name__ == "__main__":
-    commonMain(Win, "Win")
+    main = CommonMain(Win, "Win")
+    main.main()

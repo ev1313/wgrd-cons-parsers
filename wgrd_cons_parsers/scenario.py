@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from cons_utils import *
-from cons_xml import *
+from .cons_utils import *
+from .cons_xml import *
 
-from common import *
+from .common import *
 
 Gdp0 = Struct(
         "magic" / Const(b'GDP0'),
@@ -116,4 +116,5 @@ Scenario = Struct(
 )
 
 if __name__ == "__main__":
-    commonMain(Scenario, "Scenario")
+    main = CommonMain(Scenario, "Scenario")
+    main.main()

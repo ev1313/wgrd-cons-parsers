@@ -371,6 +371,25 @@ def StringEncoded_fromET(self, context, parent, name, offset=0, is_root=False):
     else:
         assert (0)
 
+    if isinstance(self.subcon, Prefixed):
+        # PascalString -> length prefixed, is ok
+        pass
+    elif isinstance(self.subcon, FixedSized):
+        # e.g. PaddedString -> size is increased
+        size = evaluate(self.subcon.length, context)
+    elif isinstance(self.subcon, NullTerminated):
+        # CString
+        pass
+    elif self.subcon.__class__ == "GreedyBytes":
+        # GreedyString
+        pass
+    elif isinstance(self.subcon, Bytes):
+        pass
+    else:
+        # unknown, check if size needs to be adjusted
+        pdb.set_trace()
+        assert(0)
+
     ctx = insert_or_append_field(context, name, elem)
     return ctx, size
 
@@ -498,6 +517,17 @@ Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
 
 
+def IgnoreZeroSized_fromET(self, context, parent, name, offset=0, is_root=False):
+    # not required in dict, as it will be rebuilt
+    return context, 0
+
+
+Check.toET = Ignore_toET
+Check.fromET = IgnoreZeroSized_fromET
+Probe.toET = Ignore_toET
+Probe.fromET = IgnoreZeroSized_fromET
+
+
 def Padded_toET(self, context, name=None, parent=None, is_root=False):
     return self.subcon.toET(context=context, name=name, parent=parent, is_root=is_root)
 
@@ -520,6 +550,7 @@ def FixedSized_fromET(self, context, parent, name, offset=0, is_root=False):
     ctx, size = self.subcon.fromET(context=context, parent=parent, name=name, offset=offset, is_root=is_root)
     length = evaluate(self.length, context)
     assert (size <= length)
+    pdb.set_trace()
     return ctx, size
 
 
@@ -557,8 +588,6 @@ Tell.toET = IgnoreCls_toET
 Tell.fromET = IgnoreCls_fromET
 Pass.toET = IgnoreCls_toET
 Pass.fromET = IgnoreCls_fromET
-Check.toET = IgnoreCls_toET
-Check.fromET = IgnoreCls_fromET
 
 
 def Pointer_toET(self, context, name=None, parent=None, is_root=False):
@@ -675,6 +704,12 @@ RepeatUntil.fromET = GenericList_fromET
 
 GreedyRange.toET = GenericList_toET
 GreedyRange.fromET = GenericList_fromET
+
+
+def Lazy_toET(self, context, name=None, parent=None, is_root=False):
+    sc = self.subcon
+    context[name] = context[name]()
+    return sc.toET(context=context, name=name, parent=parent)
 
 
 def LazyBound_toET(self, context, name=None, parent=None, is_root=False):

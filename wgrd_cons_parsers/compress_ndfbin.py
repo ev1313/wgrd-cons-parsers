@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pdb
 import sys
-from cons_utils import *
+from .cons_utils import *
 
 
 def compress_ndfbin(data, update_header=False):

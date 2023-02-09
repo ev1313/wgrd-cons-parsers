@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from cons_utils import *
-from cons_xml import *
+from .cons_utils import *
+from .cons_xml import *
 
-from common import *
+from .common import *
 
 # Fine tuned for _2x2_port_Wonsan_v11.dat => /output/highdef.tms of 
 
@@ -196,4 +196,5 @@ TMSG = Struct(
 #TMSG = Debugger(TMSG)
 
 if __name__ == "__main__":
-    commonMain(TMSG, "TMSG")
+    main = CommonMain(TMSG, "TMSG")
+    main.main()

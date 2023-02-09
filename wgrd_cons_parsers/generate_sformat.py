@@ -2,8 +2,8 @@
 import sys
 import pdb
 
-from ess import *
-from sformat import *
+from .ess import *
+from .sformat import *
 
 if __name__ == "__main__":
     essfile = open(sys.argv[1], "rb")
@@ -12,9 +12,10 @@ if __name__ == "__main__":
     ess_header = Ess.parse(essdata)
 
     sformat = Container(
+              unk0=0x6,
               isShort="true",
               channelCount=ess_header.channels,
-              unk3=512,
+              unk3=ess_header.channels*0x200,
               samplerate=ess_header.samplerate,
               frameCount=ess_header.frameCount,
               length=2,

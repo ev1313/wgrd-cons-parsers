@@ -8,10 +8,10 @@ import argparse
 import pathlib
 from io import BytesIO
 
-from cons_utils import *
-from cons_xml import *
+from .cons_utils import *
+from .cons_xml import *
 
-from common import *
+from .common import *
 
 
 Dic = Struct(
@@ -27,5 +27,5 @@ Dic = Struct(
 
 
 if __name__ == "__main__":
-    #FIXME: add extra options to respect extra arguments
-    commonMain(Dic, "Dic")
+    main = CommonMain(Dic, "Dic")
+    main.main()

@@ -9,3 +9,5 @@ spk_out.txt
 .idea
 output.log
 venv/
+dist
+*.egg-info

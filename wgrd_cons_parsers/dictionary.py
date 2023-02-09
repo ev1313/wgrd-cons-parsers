@@ -1,6 +1,6 @@
 import pdb
 from io import BytesIO
-from cons_xml import *
+from .cons_xml import *
 
 import os
 import hashlib
@@ -43,7 +43,8 @@ class Dictionary(Construct):
         return self.subcon.parse_stream(stream, **contextkw)
 
     def _build_dictitem(self, obj, stream, **contextkw):
-        return self.subcon.build(obj)
+        path, real_obj = obj
+        return self.subcon.build(real_obj)
 
     # called after all items were parsed to return the final dict
     # overloaded by FileDictionary
@@ -57,6 +58,9 @@ class Dictionary(Construct):
         offset = self.offset(context) if callable(self.offset) else self.offset
         size = self.size(context) if callable(self.size) else self.size
         ending = offset + size
+
+        if size == 0:
+            return {}
 
         def parsePath(f, path, ending):
             files = {}
@@ -99,8 +103,12 @@ class Dictionary(Construct):
 
         # Read header
         unk0 = Int32ul.parse_stream(stream)
-        assert (unk0 == 0xA)  # Probably header size
+        assert (unk0 in [0x01, 0xA])
         assert (stream.read(6) == b'\x00' * 6)
+
+        # empty dict
+        if unk0 == 0x01:
+            return {}
 
         # Start recursion
         self.dictitems = parsePath(stream, [], ending)
@@ -193,6 +201,10 @@ class Dictionary(Construct):
         # The game expects a specific order
         sortedFilePaths = sorted(filePaths, key=dictionarySort)
 
+        sorted_obj = {}
+        for path in sortedFilePaths:
+            sorted_obj[path] = obj[path]
+
         # Create a trie while preserving order
         root = createTrie(sortedFilePaths)
 
@@ -205,19 +217,59 @@ class Dictionary(Construct):
         stream.write(data)
         self._dictionary_size = len(data)
 
-        self._allitems_build(obj, stream, **context)
+        self._allitems_build(sorted_obj, stream, **context)
 
         # FIXME: maybe just return correctly sorted dictionary
-        return obj
+        return sorted_obj
 
     def _sizeof(self, context, path):
         raise SizeofError(f"Dictionary doesn't support sizeof {path}")
 
     def toET(self, context, name=None, parent=None, is_root=False):
-        assert (0)
+        assert (name is not None)
+        assert (parent is not None)
+
+        files = get_current_field(context, name)
+        for path, file in files.items():
+            ctx = Container(_=context, **files)
+            ctx[name] = file
+            ctx["_root"] = context
+            elem = self.subcon.toET(context=ctx, name=name, parent=None)
+            elem.attrib["path"] = path
+            assert(elem is not None)
+            parent.append(elem)
+
+        return None
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
-        assert (0)
+        if isinstance(self.subcon, Renamed):
+            elems = parent.findall(self.subcon.name)
+        else:
+            elems = parent.findall(name)
+
+        ret = context
+        ret["_ignore_root"] = True
+        ret[name] = {}
+        ret[f"{name}_list"] = []
+        for elem in elems:
+            path = elem.attrib.pop("path")
+            ret, child_size = self.subcon.fromET(context=ret, parent=elem, name=f"{name}_list", offset=offset, is_root=True)
+            ret[name][path] = Container(ret[f"{name}_list"][0])
+            ret[f"{name}_list"] = []
+
+        ret.pop(f"{name}_list")
+        ret.pop("_ignore_root")
+        # remove _, because construct rebuild will fail otherwise
+        if "_" in ret.keys():
+            ret.pop("_")
+
+        # build dictionary to get size of it
+        data = self.build(ret[name], **ret)
+        ret[f"_{name}_dictionary_offset"] = offset
+        ret[f"_{name}_dictionary_size"] = self._dictionary_size
+        ret[f"_{name}_dictionary_checksum"] = hashlib.md5(data[0:self._dictionary_size]).digest()
+
+        return ret, self._dictionary_size
 
 
 class FileDictionary(Dictionary):
@@ -236,7 +288,9 @@ class FileDictionary(Dictionary):
         sector_size = self.sector_size(ctx) if callable(self.sector_size) else self.sector_size
         # only for calculating the correct offsets
         aligned_size = len(data) if len(data) % sector_size == 0 else (int(len(data) / sector_size) + 1) * sector_size
-
+        #print(f"offset {self._current_offset}")
+        #print(f"size {len(data)}")
+        #print(f"aligned size {aligned_size}")
         ctx = {"offset": self._current_offset,
                "size": len(data),
                "checksum": hashlib.md5(data).digest()}
@@ -257,12 +311,19 @@ class FileDictionary(Dictionary):
         sector_size = self.sector_size(ctx) if callable(self.sector_size) else self.sector_size
         self.files = {}
         for path, header in self.dictitems.items():
+
             if enforce_alignment:
                 file = Pointer(offset_data + header.offset, Aligned(sector_size, Bytes(header.size))).parse_stream(stream)
             else:
                 file = Pointer(offset_data + header.offset, Bytes(header.size)).parse_stream(stream)
             assert(not path in self.files.keys())
             self.files[path] = file
+            #print(path)
+            #print(header.offset)
+            #print(header.size)
+            #print(header.checksum)
+            #print(hashlib.md5(file).digest())
+            #print(file[0:40])
 
             # WARNO has some files (ZZ_2.dat) which have apparently broken checksums
             # FIXME: investigate further
@@ -288,6 +349,11 @@ class FileDictionary(Dictionary):
         for path, data in obj.items():
             aligned_data = Aligned(sector_size, Bytes(len(data))).build(data)
             stream.write(aligned_data)
+            #print(data[0:100])
+            #print(path)
+            #print(f"length {len(data)}")
+            #print(f"aligned length {len(aligned_data)}")
+            #print(f"rebuild size {size}")
             size += len(aligned_data)
         self._data_size = size
 
@@ -312,6 +378,8 @@ class FileDictionary(Dictionary):
                 child = ET.Element("File")
                 child.attrib["path"] = path
                 parent.append(child)
+
+        return None
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
         sector_size = self.sector_size(context) if callable(self.sector_size) else self.sector_size

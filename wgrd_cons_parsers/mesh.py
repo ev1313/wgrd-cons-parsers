@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from cons_utils import *
-from cons_xml import *
+from .cons_utils import *
+from .cons_xml import *
 
-from common import *
+from .common import *
 
 Mesh = Struct(
     "magic " / Const(b'ZONE'),
@@ -84,4 +84,5 @@ Mesh = Struct(
 
 
 if __name__ == "__main__":
-    commonMain(Mesh, "Mesh")
+    main = CommonMain(Mesh, "Mesh")
+    main.main()

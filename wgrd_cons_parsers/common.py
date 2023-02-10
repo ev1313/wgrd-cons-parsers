@@ -74,7 +74,6 @@ class CommonMain:
         self.parse(args)
         for input in self.args.inputs:
             data = self.get_data(input)
-
             if not self.args.pack:
                 self.unpack(input, data)
             else:

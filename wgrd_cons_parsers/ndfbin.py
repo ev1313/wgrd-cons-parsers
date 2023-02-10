@@ -266,7 +266,7 @@ class NdfBinMain(CommonMain):
         if not self.args.pack:
             return decompress_ndfbin(data)
         else:
-            return compress_ndfbin(data)
+            return data
 
 
 if __name__ == "__main__":

@@ -52,7 +52,7 @@ class CommonMain:
         sys.stderr.write("indenting xml...\n")
         ET.indent(xml, space="  ", level=0)
         s = ET.tostring(xml).decode("utf-8")
-        sys.stderr.write("writing xml...\n")
+        sys.stderr.write(f"writing xml {os.path.basename(input)}.xml\n")
         os.makedirs(self.args.output, exist_ok=True)
         f = open(os.path.join(self.args.output, f"{os.path.basename(input)}.xml"), "wb")
         f.write(s.encode("utf-8"))

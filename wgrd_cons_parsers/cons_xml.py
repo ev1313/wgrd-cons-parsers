@@ -515,6 +515,8 @@ Rebuild.toET = Ignore_toET
 Rebuild.fromET = Ignore_fromET
 Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
+Computed.toET = Ignore_toET
+Computed.fromET = Ignore_fromET
 
 
 def IgnoreZeroSized_fromET(self, context, parent, name, offset=0, is_root=False):

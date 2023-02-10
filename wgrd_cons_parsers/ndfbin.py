@@ -49,7 +49,7 @@ NDFType = Struct(
                 "key" / LazyBound(lambda: NDFType),
                 "value" / LazyBound(lambda: NDFType),
             )[this.count]),
-        0x00000013: "Long" / Struct("Long" / Int64ul),
+        0x00000013: "Long" / Struct("value" / Int64ul),
         0x00000014: "Blob" / Struct(
             "_size" / Int32ul,
             "data" / Bytes(this._size),

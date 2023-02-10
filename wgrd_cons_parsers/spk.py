@@ -113,7 +113,7 @@ IbufHeader = Struct(
     "count" / Int32ul,
     "unk1" / Const(0x1, Int16ul),
     "compressed" / Enum(Int16ul, uncompressed=0x0, compressed=0xC000),
-    "data" / Lazy(Pointer(this._._.ibufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"ibufs/ibuf_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
+    "data" / Lazy(Pointer(this._._.ibufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"ibufs/ibuf_{ctx._index}_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
 )
 
 VbufHeader = Struct(
@@ -122,13 +122,13 @@ VbufHeader = Struct(
     "count" / Int32ul,
     "vertexFormatIndex" / Int16ul,
     "compressed" / Enum(Int16ul, uncompressed=0x0, compressed=0xC000),
-    "data" / Lazy(Pointer(this._._.vbufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"vbufs/vbuf_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
+    "data" / Lazy(Pointer(this._._.vbufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"vbufs/vbuf_{ctx._index}_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
 )
 
 NodeHeader = Struct(
     "offset" / Rebuild(Int32ul, lambda ctx: 0 if ctx._index == 0 else ctx._.data[ctx._index-1].offset + ctx._.data[ctx._index-1].size),
     "size" / Rebuild(Int32ul, this._ptrsize_data),
-    "data" / Lazy(Pointer(this._._.nodeData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"nodes/node_{ctx.offset}_{ctx.size}.bin")))
+    "data" / Lazy(Pointer(this._._.nodesData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"nodes/node_{ctx._index}_{ctx.offset}_{ctx.size}.bin")))
 )
 
 Spk = Struct(

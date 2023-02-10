@@ -17,4 +17,3 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where=["wgrd_cons_parsers"]
-namespaces=False

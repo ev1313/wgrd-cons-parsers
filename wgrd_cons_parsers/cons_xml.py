@@ -362,7 +362,7 @@ def StringEncoded_fromET(self, context, parent, name, offset=0, is_root=False):
         elem = parent
     else:
         elem = parent.attrib[name]
-    if self.encoding in ["ascii", "utf-8"]:
+    if self.encoding in ["ascii", "iso-8859-1", "utf-8"]:
         size = len(elem)
     elif self.encoding in ["utf-16-le", "utf-16-be", "utf-16"]:
         size = len(elem) * 2
@@ -456,6 +456,9 @@ def IfThenElse_fromET(self, context, parent, name, offset=0, is_root=False):
     if elem is None:
         if self.elsesubcon.__class__.__name__ == "Array":
             elems = get_elem(self.elsesubcon.subcon.name)
+            # Array is empty
+            if elems is None:
+                return []
             if len(elems) > 0:
                 return self.elsesubcon.fromET(context=context, parent=parent, name=name, offset=offset)
 
@@ -515,8 +518,12 @@ Rebuild.toET = Ignore_toET
 Rebuild.fromET = Ignore_fromET
 Const.toET = Ignore_toET
 Const.fromET = Ignore_fromET
+
+def Computed_fromET(self, context, parent, name, offset=0, is_root=False):
+    return context, 0
+
 Computed.toET = Ignore_toET
-Computed.fromET = Ignore_fromET
+Computed.fromET = Computed_fromET
 
 
 def IgnoreZeroSized_fromET(self, context, parent, name, offset=0, is_root=False):

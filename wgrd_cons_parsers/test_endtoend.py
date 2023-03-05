@@ -186,11 +186,8 @@ def test_rebuild():
     assert (ctx["foo"]["foo"] == 5)
     assert (ctx["foo"]["one"] == None)
     assert (ctx["foo"]["two"] == None)
-
-    rebuild = T.build(ctx)
-    assert(rebuild["foo"]["foo"] == 5)
-    assert(rebuild["foo"]["one"] == 5)
-    assert(rebuild["foo"]["two"] == 5)
+    rebuild = T.build(ctx["foo"])
+    assert(rebuild == b'\x05\x00\x00\x00\x05\x00\x00\x00\x05\x00\x00\x00')
 
 
 def test_xml_rebuild_prefixed_array():

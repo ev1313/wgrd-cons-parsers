@@ -458,7 +458,8 @@ def IfThenElse_fromET(self, context, parent, name, offset=0, is_root=False):
             elems = get_elem(self.elsesubcon.subcon.name)
             # Array is empty
             if elems is None:
-                return []
+                context[name] = []
+                return context, 0
             if len(elems) > 0:
                 return self.elsesubcon.fromET(context=context, parent=parent, name=name, offset=offset)
 

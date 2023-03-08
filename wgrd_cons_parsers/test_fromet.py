@@ -195,7 +195,6 @@ def test_array_struct_nested():
     assert (ctx["teststruct"]["arr"][1]["w"] == 241)
     assert (ctx["teststruct"]["bar"] == 4)
 
-
 def test_ifthenelse():
     T = If(this.foo == 1, "foo" / Struct("x" / Int32ul))
 
@@ -231,6 +230,61 @@ def test_ifthenelse():
     assert (ctx["testname"]["_offset"] == 12)
     assert (ctx["testname"]["_size"] == 10)
     assert (ctx["testname"]["_endoffset"] == 22)
+
+
+def test_named_ifthenelse():
+    T = Struct("foo" / Int32ul,
+               "ui32" / If(this.foo == 1, Struct("x" / Int32ul)),
+               "ui16" / If(this.foo == 0, Struct("x" / Int16ul)),
+               "baz" / Int32ul,
+               )
+    parent = ET.Element("parent")
+    child = ET.Element("testname")
+    child.attrib["foo"] = "1"
+    ui16 = ET.Element("ui16")
+    ui16.attrib["x"] = "32"
+    child.attrib["baz"] = "4"
+    child.append(ui16)
+    parent.append(child)
+    ctx = {"test": "foobarbaz"}
+    ctx, size = T.fromET(context=ctx, parent=parent, name="testname", offset=12)
+    assert (ctx["test"] == "foobarbaz")
+    assert (size == 10)
+    assert (ctx["testname"]["_offset"] == 12)
+    assert (ctx["testname"]["_size"] == 10)
+    assert (ctx["testname"]["_endoffset"] == 22)
+
+    SwitchType = Struct(
+    "typeId" / Rebuild(Int32ul, this._switchid_data),
+    "data" / Switch(this.typeId, {
+        0x00000000: "Boolean" / Struct("value" / Enum(Int8ul, false=0, true=1)),
+        0x00000001: "Int8" / Struct("value" / Int8ul),
+        0x00000002: "Int16" / Struct("value" / Int16ul),
+    })
+    )
+    
+    T = Struct("foo" / Int32ul,
+               "ui32" / If(this.foo == 1, Int32ul),
+               "ui16" / If(this.foo == 0, SwitchType),
+               "baz" / Int32ul,
+               )
+    parent = ET.Element("parent")
+    child = ET.Element("testname")
+    child.attrib["foo"] = "1"
+    ui16 = ET.Element("ui16")
+    switch = ET.Element("Int16")
+    switch.attrib["value"] = "32"
+    ui16.append(switch)
+    child.attrib["baz"] = "4"
+    child.append(ui16)
+    parent.append(child)
+    ctx = {"test": "foobarbaz"}
+    ctx, size = T.fromET(context=ctx, parent=parent, name="testname", offset=12)
+    assert (ctx["test"] == "foobarbaz")
+    assert (size == 14)
+    assert (ctx["testname"]["_offset"] == 12)
+    assert (ctx["testname"]["_size"] == 14)
+    assert (ctx["testname"]["_endoffset"] == 26)
 
 
 def test_focuseseq():

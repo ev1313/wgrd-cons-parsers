@@ -42,7 +42,7 @@ NDFType = Struct(
         0x0000000D: "Color" / Struct("r" / Int8ul, "g" / Int8ul, "b" / Int8ul, "a" / Int8ul),
         0x0000000E: "S32_vec3" / Struct("x" / Int32sl, "y" / Int32sl, "z" / Int32sl),
         0x0000000F: "Matrix" / Struct("Matrix" / Array(16, Float32l)),
-        0x00000011: "List" / PrefixedArray(Int32ul, "ListItem" / LazyBound(lambda: NDFType)),
+        0x00000011: "ListItem" / PrefixedArray(Int32ul, "ListItem" / LazyBound(lambda: NDFType)),
         0x00000012: "Map" / Struct(
             "count" / Rebuild(Int32ul, len_(this.mapitem)),
             "mapitem" / Struct(

@@ -94,8 +94,8 @@ class File(Adapter):
         f.close()
         return data
 
-    def toET(self, context, name=None, parent=None):
-        return StringEncoded_toET(self, context, name, parent)
+    def toET(self, context, name=None, parent=None, is_root=False):
+        return StringEncoded_toET(self, context, name, parent, is_root=is_root)
 
     def fromET(self, context, parent, name, offset=0, is_root=False):
         if "_root" in context.keys():

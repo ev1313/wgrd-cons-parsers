@@ -25,7 +25,7 @@ WargameProfile = Struct(
     "w2" / Const(1, Int32ul),
     "profile" / PascalString(Int32ul, "ascii"),
     "ndflength" / Int32ul,
-    "ndf" / Bytes(this.ndflength),
+    "ndf" / File(Bytes(this.ndflength), "profile.ndfbin"),
 )
 
 if __name__ == "__main__":

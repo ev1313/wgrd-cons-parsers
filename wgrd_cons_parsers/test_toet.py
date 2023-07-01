@@ -1,4 +1,4 @@
-# tests for the construct xml toET stuff
+# tests for the dingsda xml toET stuff
 
 import pytest
 

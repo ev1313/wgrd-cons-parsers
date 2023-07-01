@@ -259,7 +259,7 @@ class Dictionary(Construct):
 
         ret.pop(f"{name}_list")
         ret.pop("_ignore_root")
-        # remove _, because construct rebuild will fail otherwise
+        # remove _, because dingsda rebuild will fail otherwise
         if "_" in ret.keys():
             ret.pop("_")
 

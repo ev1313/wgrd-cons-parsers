@@ -4,10 +4,10 @@ import os
 import sys
 import argparse
 import pathlib
-from io import BytesIO
 import sys
 
-from .cons_xml import *
+from dingsda import *
+import xml.etree.ElementTree as ET
 
 
 class CommonMain:

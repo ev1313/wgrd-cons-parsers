@@ -3,7 +3,7 @@
 from .cons_utils import *
 from .cons_xml import *
 
-from construct import *
+from dingsda import *
 
 from .common import *
 

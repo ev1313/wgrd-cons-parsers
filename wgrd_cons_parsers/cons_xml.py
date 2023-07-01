@@ -9,7 +9,7 @@ import csv
 from copy import deepcopy
 
 import xml.etree.ElementTree as ET
-from construct import *
+from dingsda import *
 
 
 def evaluate(param, context):
@@ -30,7 +30,7 @@ def create_child_context(context, name, list_index=None, is_root=False):
         ctx = Container(_=context, **data)
     elif isinstance(data, ListContainer) or isinstance(data, list):
         assert (list_index is not None)
-        # construct does not add an additional _ layer for arrays
+        # dingsda does not add an additional _ layer for arrays
         ctx = Container(**context)
         ctx._index = list_index
         ctx[f"{name}_{list_index}"] = data[list_index]
@@ -122,7 +122,7 @@ def Renamed_fromET(self, context, parent, name, offset=0, is_root=False):
     if renamed:
         ctx = rename_in_context(context=context, name=self.name, new_name=name)
 
-    # construct requires this when rebuilding, else key error is raised
+    # dingsda requires this when rebuilding, else key error is raised
     if not self.name in ctx.keys():
         ctx[self.name] = None
 
@@ -178,7 +178,7 @@ def Struct_fromET(self, context, parent, name, offset=0, is_root=False):
     ctx["_size"] = size
     ctx["_endoffset"] = offset
 
-    # remove _, because construct rebuild will fail otherwise
+    # remove _, because dingsda rebuild will fail otherwise
     if "_" in ctx.keys():
         ctx.pop("_")
 
@@ -206,7 +206,7 @@ def FocusedSeq_toET(self, context, name=None, parent=None, is_root=False):
                 sc = sc.subcon
             else:
                 assert (0)
-            return sc.toET(context=context, name=name, parent=parent)
+            return sc._toET(context=context, name=name, parent=parent, is_root=is_root)
     assert (0)
 
 
@@ -229,7 +229,7 @@ def FocusedSeq_fromET(self, context, parent, name, offset=0, is_root=False):
 
     ctx["_size"] = size
 
-    # construct fails, when _ already exists in context
+    # dingsda fails, when _ already exists in context
     if "_" in ctx.keys():
         ctx.pop("_")
 
@@ -387,7 +387,7 @@ def StringEncoded_fromET(self, context, parent, name, offset=0, is_root=False):
         pass
     else:
         # unknown, check if size needs to be adjusted
-        pdb.set_trace()
+        #pdb.set_trace()
         assert(0)
 
     ctx = insert_or_append_field(context, name, elem)
@@ -700,7 +700,7 @@ def GenericList_fromET(self, context, parent, name, offset=0, is_root=False):
         ret[f"_endoffset_{name}_{idx}"] = offset
         idx += 1
     ret.pop("_ignore_root")
-    # remove _, because construct rebuild will fail otherwise
+    # remove _, because dingsda rebuild will fail otherwise
     if "_" in ret.keys():
         ret.pop("_")
     return ret, size

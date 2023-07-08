@@ -56,14 +56,23 @@ class ZlibCompressed(Adapter):
         self.decompressed_size = len(obj)
         return compress_zlib(obj)
 
-    def toET(self, context, name=None, parent=None):
-        return Bytes_toET(self, context, name, parent)
+    def _toET(self, parent, name, context, path):
+        Bytes._toET(self, parent, name, context, path)
 
-    def fromET(self, context, parent, name, offset=0, is_root=False):
-        return Bytes_fromET(self, context=context, parent=parent, name=name, offset=offset, is_root=is_root)
+    def _fromET(self, parent, name, context, path, is_root=False):
+        return Bytes._fromET(self, parent, name, context, path, is_root=is_root)
 
 
 class File(Adapter):
+    """
+    Adapter for reading/writing files of the values in the subcon.
+
+    If the context contains a key "_cons_xml_output_directory", the file will be written there when decoding.
+
+    If the context contains a key "_cons_xml_input_directory", the file will be read from there when encoding.
+
+    The filepath is written in the dictionary / XML afterwards.
+    """
     def __init__(self, subcon, path):
         super().__init__(subcon)
         self._path = path
@@ -97,69 +106,26 @@ class File(Adapter):
         f.close()
         return data
 
-    def toET(self, context, name=None, parent=None, is_root=False):
-        return StringEncoded_toET(self, context, name, parent, is_root=is_root)
+    def _toET(self, parent, name, context, path):
+        return StringEncoded._toET(self, parent, name, context, path)
 
-    def fromET(self, context, parent, name, offset=0, is_root=False):
+    def _fromET(self, parent, name, context, path, is_root=False):
         if "_root" in context.keys():
             inpath = context["_root"].get("_cons_xml_input_directory", "out")
         else:
             inpath = context.get("_cons_xml_input_directory", "out")
 
         self.encoding = "utf-8"
-        ctx, size = StringEncoded_fromET(self, context=context, parent=parent, name=name, offset=offset, is_root=is_root)
+        ctx = StringEncoded._fromET(self, parent, name, context, path, is_root=is_root)
         path = ctx[name]
         p = os.path.join(inpath, path)
         f = open(p, "rb")
         ctx[name] = f.read()
         f.close()
-        return ctx, os.stat(p).st_size
-
-
-
-#class RepeatUntilSize(Subconstruct):
-#    def __init__(self, predicate, subcon, discard=False):
-#        super().__init__(subcon)
-#        self.predicate = predicate
-#        self.discard = discard
-#
-#    def _parse(self, stream, context, path):
-#        predicate = self.predicate
-#        discard = self.discard
-#        if not callable(predicate):
-#            predicate = lambda _1, _2, _3: predicate
-#        obj = ListContainer()
-#        for i in itertools.count():
-#            context._index = i
-#            e = self.subcon._parsereport(stream, context, path)
-#            if not discard:
-#                obj.append(e)
-#            if predicate(e, obj, context):
-#                return obj
-#
-#    def _build(self, obj, stream, context, path):
-#        discard = self.discard
-#        partiallist = ListContainer()
-#        retlist = ListContainer()
-#        for i, e in enumerate(obj):
-#            context._index = i
-#            buildret = self.subcon._build(e, stream, context, path)
-#            if not discard:
-#                retlist.append(buildret)
-#                partiallist.append(buildret)
-#        return retlist
-#
-#    def _sizeof(self, context, path):
-#        raise SizeofError("cannot calculate size, amount depends on actual data", path=path)
-#
-#
-#RepeatUntilSize.toET = GenericList_toET
-#RepeatUntilSize.fromET = GenericList_fromET
-
+        return ctx
 
 def readArea(type):
     def checkArea(obj, lst, ctx):
-        # print(ctx._io.tell(), (ctx.offset + ctx.size))
         return ctx._io.tell() >= (ctx.offset + ctx.size)
 
     return IfThenElse(this.size > 0,

@@ -1,5 +1,8 @@
 import pdb
 from io import BytesIO
+
+import xml.etree.ElementTree as ET
+
 from dingsda import *
 
 import os
@@ -225,7 +228,7 @@ class Dictionary(Construct):
     def _sizeof(self, context, path):
         raise SizeofError(f"Dictionary doesn't support sizeof {path}")
 
-    def toET(self, context, name=None, parent=None, is_root=False):
+    def _toET(self, parent, name, context, path):
         assert (name is not None)
         assert (parent is not None)
 
@@ -241,7 +244,7 @@ class Dictionary(Construct):
 
         return None
 
-    def fromET(self, context, parent, name, offset=0, is_root=False):
+    def _fromET(self, parent, name, context, path, is_root=False):
         if isinstance(self.subcon, Renamed):
             elems = parent.findall(self.subcon.name)
         else:
@@ -269,7 +272,7 @@ class Dictionary(Construct):
         ret[f"_{name}_dictionary_size"] = self._dictionary_size
         ret[f"_{name}_dictionary_checksum"] = hashlib.md5(data[0:self._dictionary_size]).digest()
 
-        return ret, self._dictionary_size
+        return ret
 
 
 class FileDictionary(Dictionary):
@@ -361,7 +364,23 @@ class FileDictionary(Dictionary):
         self._current_offset=0
         super()._build(obj, stream, context, path)
 
-    def toET(self, context, name=None, parent=None, is_root=False):
+    def _preprocess(self, obj, context, path, offset=0):
+        sector_size = self.sector_size(context) if callable(self.sector_size) else self.sector_size
+
+        # build dictionary to get size of it
+        data = self.build(obj, **context)
+
+        # calculate data offset
+        initial_offset = offset + self._dictionary_size
+        aligned_offset = initial_offset if initial_offset % sector_size == 0 else (int(initial_offset / sector_size) + 1) * sector_size
+        # set offsets amd sizes
+        return obj, {"_dictionary_offset": offset,
+         "_dictionary_size": self._dictionary_size,
+         "_dictionary_checksum": hashlib.md5(data[0:self._dictionary_size]).digest(),
+         "_offset": aligned_offset,
+         "_size": self._data_size}
+
+    def _toET(self, parent, name, context, path):
         assert(name is not None)
         assert(parent is not None)
         if "_root" in context.keys():
@@ -369,7 +388,7 @@ class FileDictionary(Dictionary):
         else:
             outpath = context.get("_cons_xml_output_directory", "out")
 
-        files = get_current_field(context, name)
+        files = context[name]
         for path, file in files.items():
             fspath = os.path.join(outpath, path.replace("\\", os.sep).replace("\\\\", os.sep))
             os.makedirs(os.path.dirname(fspath), exist_ok=True)
@@ -381,9 +400,7 @@ class FileDictionary(Dictionary):
 
         return None
 
-    def fromET(self, context, parent, name, offset=0, is_root=False):
-        sector_size = self.sector_size(context) if callable(self.sector_size) else self.sector_size
-
+    def _fromET(self, parent, name, context, path, is_root=False):
         elems = parent.findall("File")
         context[name] = {}
         for elem in elems:
@@ -395,18 +412,5 @@ class FileDictionary(Dictionary):
             filepath = os.path.join(inpath, path.replace("\\", os.sep).replace("\\\\", os.sep))
             data = open(filepath, "rb").read()
             context[name][path] = data
-        # build dictionary to get size of it
-        data = self.build(context[name], **context)
 
-        # calculate data offset
-        initial_offset = offset + self._dictionary_size
-        aligned_offset = initial_offset if initial_offset % sector_size == 0 else (int(initial_offset / sector_size) + 1) * sector_size
-        # set offsets amd sizes
-        context[f"_{name}_dictionary_offset"] = offset
-        context[f"_{name}_dictionary_size"] = self._dictionary_size
-        context[f"_{name}_dictionary_checksum"] = hashlib.md5(data[0:self._dictionary_size]).digest()
-        context[f"_{name}_data_offset"] = aligned_offset
-        context[f"_{name}_data_size"] = self._data_size
-        # FIXME: assert *aligned*
-        #assert(len(data) == self._data_size + self._dictionary_size)
-        return context, len(data)
+        return context

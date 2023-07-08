@@ -18,8 +18,8 @@ EDat = Struct(
     "pad0" / Padding(17),
     "offset_files" / Rebuild(Int32ul, this._files_dictionary_offset),
     "size_files" / Rebuild(Int32ul, this._files_dictionary_size),
-    "offset_data" / Rebuild(Int32ul, this._files_data_offset),
-    "size_data" / Rebuild(Int32ul, this._files_data_size),
+    "offset_data" / Rebuild(Int32ul, this._files_offset),
+    "size_data" / Rebuild(Int32ul, this._files_size),
     "pad1" / Padding(4),
     "sectorSize" / Int32ul,
     "checksum" / Rebuild(Bytes(16), this._files_dictionary_checksum), # md5 checksum of the whole files section

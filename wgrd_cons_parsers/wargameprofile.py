@@ -4,6 +4,7 @@ import pdb
 
 from dingsda import *
 from dingsda.lib import *
+from cons_utils import *
 from .common import CommonMain
 
 WargameProfile = Struct(

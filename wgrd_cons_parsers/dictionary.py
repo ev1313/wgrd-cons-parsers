@@ -1,6 +1,6 @@
 import pdb
 from io import BytesIO
-from .cons_xml import *
+from dingsda import *
 
 import os
 import hashlib

@@ -8,8 +8,7 @@ import argparse
 import pathlib
 from io import BytesIO
 
-from .cons_utils import *
-from .cons_xml import *
+from dingsda import *
 
 from .common import *
 from .dictionary import *

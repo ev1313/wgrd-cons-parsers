@@ -63,6 +63,7 @@ class CommonMain:
         sys.stderr.write("rebuilding from xml...\n")
         ctx = self.add_extra_args(input)
         ctx = self.subcon.fromET(xml)
+        pdb.set_trace()
         ctx, _ = self.subcon.preprocess(ctx)
         sys.stderr.write("building %s...\n" % self.sc_name)
         rebuilt_data = self.subcon.build(ctx)

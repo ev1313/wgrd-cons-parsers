@@ -130,5 +130,6 @@ def readArea(type):
 
     return IfThenElse(this.size > 0,
                       Pointer(lambda foo: int(foo.offset), RepeatUntil(predicate=checkArea, subcon=type, check_predicate=False)),
-                      Array(0, type)
+                      Pass,
+                      rebuild_hack=True
                       )

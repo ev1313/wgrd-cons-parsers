@@ -10,6 +10,8 @@ from io import BytesIO
 
 from dingsda import *
 
+from cons_utils import *
+
 from .compress_ndfbin import compress_ndfbin
 from .decompress_ndfbin import decompress_ndfbin
 

@@ -3,6 +3,7 @@
 import sys
 import pdb
 from dingsda import *
+from cons_utils import decompress_zlib
 
 
 def decompress_ndfbin(data):

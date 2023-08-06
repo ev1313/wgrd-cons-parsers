@@ -8,10 +8,19 @@ from dingsda import *
 import os
 import hashlib
 
+
+def ctx_get_opt(context, key, default = None):
+    ret = None
+    if "_root" in context.keys():
+        ret = context["_root"].get(key, None)
+    if ret is None:
+        ret = context.get(key, None)
+    return ret if ret is not None else default
+
+
 # sorting algorithm used by the game for filepaths
 def dictionarySort(l):
     s = []
-
     def R(a, b):
         l = []
         for c in range(ord(a[0]), ord(b[0]) + 1):
@@ -302,12 +311,8 @@ class FileDictionary(Dictionary):
 
     def _allitems_parsed(self, stream, **contextkw):
         ctx = Container(**contextkw)
-        if "_root" in ctx.keys():
-            enforce_alignment = ctx["_root"]["_"].get("_cons_xml_filesdictionary_alignment", True)
-            disable_checks = ctx["_root"]["_"].get("_cons_xml_filesdictionary_disable_checks", False)
-        else:
-            enforce_alignment = ctx["_"].get("_cons_xml_filesdictionary_alignment", True)
-            disable_checks = ctx["_"].get("_cons_xml_filesdictionary_disable_checks", False)
+        enforce_alignment = ctx_get_opt(ctx, "_cons_xml_filesdictionary_alignment", True)
+        disable_checks = ctx_get_opt(ctx, "_cons_xml_filesdictionary_disable_checks", False)
 
         offset_data = self.offset_data(ctx) if callable(self.offset_data) else self.offset_data
         size_data = self.size_data(ctx) if callable(self.size_data) else self.size_data
@@ -383,10 +388,7 @@ class FileDictionary(Dictionary):
     def _toET(self, parent, name, context, path):
         assert(name is not None)
         assert(parent is not None)
-        if "_root" in context.keys():
-            outpath = context["_root"].get("_cons_xml_output_directory", "out")
-        else:
-            outpath = context.get("_cons_xml_output_directory", "out")
+        outpath = ctx_get_opt(context, "_cons_xml_output_directory", None)
 
         files = context[name]
         for path, file in files.items():
@@ -404,10 +406,8 @@ class FileDictionary(Dictionary):
         elems = parent.findall("File")
         context[name] = {}
         for elem in elems:
-            if "_root" in context.keys():
-                inpath = context["_root"].get("_cons_xml_input_directory", "out")
-            else:
-                inpath = context.get("_cons_xml_input_directory", "out")
+            inpath = ctx_get_opt(context, "_cons_xml_input_directory", None)
+
             path = elem.attrib["path"]
             filepath = os.path.join(inpath, path.replace("\\", os.sep).replace("\\\\", os.sep))
             data = open(filepath, "rb").read()

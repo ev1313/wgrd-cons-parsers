@@ -112,7 +112,7 @@ OBJETable = Struct(
     "pad1" / Const(b"\x00" * 4),
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_objects),
     "pad2" / Const(b"\x00" * 4),
-    "objects" / readArea("Object" / NDFObject),
+    "objects" / Area("Object" / NDFObject, offset=this.offset, size=this.size),
 )
 
 # second table
@@ -123,9 +123,9 @@ TOPOTable = Struct(
     "pad1" / Const(b"\x00" * 4),
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_topobjects),
     "pad2" / Const(b"\x00" * 4),
-    "topobjects" / readArea("TopObject" / Struct(
+    "topobjects" / Area("TopObject" / Struct(
         "objectIndex" / Int32ul,
-    )),
+    ), offset=this.offset, size=this.size),
 )
 
 # third table
@@ -137,10 +137,10 @@ CHNKTable = Struct(
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_chunks),
     "pad2" / Const(b"\x00" * 4),
     # FIXME: check if unk0 is topOfObjectIndex
-    "chunks" / readArea("Chunk" / Struct(
+    "chunks" / Area("Chunk" / Struct(
         "unk0" / Int32ul,
         "objectCount" / Int32ul,
-    )),
+    ), offset=this.offset, size=this.size),
 )
 
 # fourth table
@@ -151,12 +151,9 @@ CLASTable = Struct(
     "pad1" / Const(b"\x00" * 4),
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_classes),
     "pad2" / Const(b"\x00" * 4),
-    "classes" / readArea("Class" / Struct(
-        "_tell_start" / Tell,
+    "classes" / Area("Class" / Struct(
         "name" / PascalString(Int32ul, "utf-8"),
-        "_tell_end" / Tell,
-        "_size" / Computed(this._tell_end - this._tell_start),
-    )),
+    ), offset=this.offset, size=this.size),
 )
 
 # fifth table
@@ -167,10 +164,10 @@ PROPTable = Struct(
     "pad1" / Const(b"\x00" * 4),
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_properties),
     "pad2" / Const(b"\x00" * 4),
-    "properties" / readArea("Property" / Struct(
+    "properties" / Area("Property" / Struct(
         "name" / PascalString(Int32ul, "iso-8859-1"),
         "classIndex" / Int32ul,
-    )),
+    ), offset=this.offset, size=this.size),
 )
 
 # sixth table
@@ -181,9 +178,9 @@ STRGTable = Struct(
     "pad1" / Const(b"\x00" * 4),
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_strings),
     "pad2" / Const(b"\x00" * 4),
-    "strings" / readArea("String" / Struct(
+    "strings" / Area("String" / Struct(
         "value" / PascalString(Int32ul, "iso-8859-1"),
-    )),
+    ), offset=this.offset, size=this.size),
 )
 
 # seventh table
@@ -194,9 +191,9 @@ TRANTable = Struct(
     "pad1" / Const(b"\x00" * 4),
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_trans),
     "pad2" / Const(b"\x00" * 4),
-    "trans" / readArea("Tran" / Struct(
+    "trans" / Area("Tran" / Struct(
         "name" / PascalString(Int32ul, "iso-8859-1"),
-    )),
+    ), offset=this.offset, size=this.size),
 )
 
 IMPR = Struct(
@@ -216,7 +213,7 @@ IMPRTable = Struct(
     "pad1" / Const(b"\x00" * 4),
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_imprs),
     "pad2" / Const(b"\x00" * 4),
-    "imprs" / readArea("Impr" / IMPR),
+    "imprs" / Area("Impr" / IMPR, offset=this.offset, size=this.size),
 )
 
 # nineth table
@@ -227,7 +224,7 @@ EXPRTable = Struct(
     "pad1" / Const(b"\x00" * 4),
     "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_exprs),
     "pad2" / Const(b"\x00" * 4),
-    "exprs" / readArea("Expr" / IMPR),
+    "exprs" / Area("Expr" / IMPR, offset=this.offset, size=this.size),
 )
 
 TOC0Header = Struct(

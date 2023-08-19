@@ -124,12 +124,3 @@ class File(Adapter):
         f.close()
         return ctx
 
-def readArea(type):
-    def checkArea(obj, lst, ctx):
-        return ctx._io.tell() >= (ctx.offset + ctx.size)
-
-    return IfThenElse(this.size > 0,
-                      Pointer(lambda foo: int(foo.offset), RepeatUntil(predicate=checkArea, subcon=type, check_predicate=False)),
-                      Pass,
-                      rebuild_hack=True
-                      )

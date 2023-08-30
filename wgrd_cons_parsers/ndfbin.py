@@ -9,6 +9,8 @@ import pathlib
 from io import BytesIO
 
 from dingsda import *
+from dingsda.string import PascalString
+from dingsda.lazy import LazyBound
 
 from cons_utils import *
 

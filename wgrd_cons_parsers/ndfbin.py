@@ -20,7 +20,7 @@ from .decompress_ndfbin import decompress_ndfbin
 from .common import CommonMain
 
 NDFType = Struct(
-    "typeId" / Rebuild(Int32ul, this._switchid_data),
+    "typeId" / Rebuild(Int32ul, this._switch_id_data),
     "data" / Switch(this.typeId, {
         0x00000000: "Boolean" / Struct("value" / Enum(Int8ul, false=0, true=1)),
         0x00000001: "Int8" / Struct("value" / Int8ul),
@@ -31,7 +31,7 @@ NDFType = Struct(
         0x00000007: "StringReference" / Struct("stringIndex" / Int32ul),
         0x00000008: "WideString" / Struct("str" / PascalString(Int32ul, "utf-16")),
         0x00000009: "Reference" / Struct(
-            "typeId" / Rebuild(Int32ul, this._switchid_ref),
+            "typeId" / Rebuild(Int32ul, this._switch_id_ref),
             "ref" / Switch(this.typeId, {
                 0xAAAAAAAA: "TranReference" / Struct("tranIndex" / Int32ul),
                 0xBBBBBBBB: "ObjectReference" / Struct(
@@ -112,7 +112,7 @@ OBJETable = Struct(
     "pad0" / Const(b"\x00" * 4),
     "offset" / Rebuild(Int32ul, lambda foo: foo._._.headerSize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_objects),
+    "size" / Rebuild(Int32ul, lambda foo: foo._objects_ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "objects" / Area("Object" / NDFObject, offset=this.offset, size=this.size),
 )
@@ -121,9 +121,9 @@ OBJETable = Struct(
 TOPOTable = Struct(
     "magic" / Magic(b"TOPO"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.OBJE.offset + foo._.OBJE._ptrsize_objects),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.OBJE.offset + foo._.OBJE._objects_ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_topobjects),
+    "size" / Rebuild(Int32ul, lambda foo: foo._topobjects_ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "topobjects" / Area("TopObject" / Struct(
         "objectIndex" / Int32ul,
@@ -134,9 +134,9 @@ TOPOTable = Struct(
 CHNKTable = Struct(
     "magic" / Magic(b"CHNK"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.TOPO.offset + foo._.TOPO._ptrsize_topobjects),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.TOPO.offset + foo._.TOPO._topobjects_ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_chunks),
+    "size" / Rebuild(Int32ul, lambda foo: foo._chunks_ptrsize),
     "pad2" / Const(b"\x00" * 4),
     # FIXME: check if unk0 is topOfObjectIndex
     "chunks" / Area("Chunk" / Struct(
@@ -149,9 +149,9 @@ CHNKTable = Struct(
 CLASTable = Struct(
     "magic" / Magic(b"CLAS"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.CHNK.offset + foo._.CHNK._ptrsize_chunks),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.CHNK.offset + foo._.CHNK._chunks_ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_classes),
+    "size" / Rebuild(Int32ul, lambda foo: foo._classes_ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "classes" / Area("Class" / Struct(
         "name" / PascalString(Int32ul, "utf-8"),
@@ -162,9 +162,9 @@ CLASTable = Struct(
 PROPTable = Struct(
     "magic" / Magic(b"PROP"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.CLAS.offset + foo._.CLAS._ptrsize_classes),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.CLAS.offset + foo._.CLAS._classes_ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_properties),
+    "size" / Rebuild(Int32ul, lambda foo: foo._properties_ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "properties" / Area("Property" / Struct(
         "name" / PascalString(Int32ul, "iso-8859-1"),
@@ -176,9 +176,9 @@ PROPTable = Struct(
 STRGTable = Struct(
     "magic" / Magic(b"STRG"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.PROP.offset + foo._.PROP._ptrsize_properties),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.PROP.offset + foo._.PROP._properties_ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_strings),
+    "size" / Rebuild(Int32ul, lambda foo: foo._strings_ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "strings" / Area("String" / Struct(
         "value" / PascalString(Int32ul, "iso-8859-1"),
@@ -189,9 +189,9 @@ STRGTable = Struct(
 TRANTable = Struct(
     "magic" / Magic(b"TRAN"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.STRG.offset + foo._.STRG._ptrsize_strings),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.STRG.offset + foo._.STRG._strings_ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_trans),
+    "size" / Rebuild(Int32ul, lambda foo: foo._trans_ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "trans" / Area("Tran" / Struct(
         "name" / PascalString(Int32ul, "iso-8859-1"),
@@ -211,9 +211,9 @@ IMPR = Struct(
 IMPRTable = Struct(
     "magic" / Magic(b"IMPR"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.TRAN.offset + foo._.TRAN._ptrsize_trans),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.TRAN.offset + foo._.TRAN._trans_ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_imprs),
+    "size" / Rebuild(Int32ul, lambda foo: foo._imprs_ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "imprs" / Area("Impr" / IMPR, offset=this.offset, size=this.size),
 )
@@ -222,9 +222,9 @@ IMPRTable = Struct(
 EXPRTable = Struct(
     "magic" / Magic(b"EXPR"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.IMPR.offset + foo._.IMPR._ptrsize_imprs),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.IMPR.offset + foo._.IMPR._imprs_ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._ptrsize_exprs),
+    "size" / Rebuild(Int32ul, lambda foo: foo._exprs_ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "exprs" / Area("Expr" / IMPR, offset=this.offset, size=this.size),
 )

@@ -9,6 +9,7 @@ import sys
 from dingsda import *
 import xml.etree.ElementTree as ET
 
+import gc
 
 class CommonMain:
     def __init__(self, subcon: Construct, sc_name: str):
@@ -65,9 +66,12 @@ class CommonMain:
         sys.stderr.write("rebuilding from xml...\n")
         ctx = self.add_extra_args(input_path)
         ctx = self.subcon.fromET(xml)
-        ctx, _ = self.subcon.preprocess(ctx)
+        preprocessed_ctx, _ = self.subcon.preprocess(ctx)
+        del xml
+        del ctx
+        gc.collect()
         sys.stderr.write("building %s...\n" % self.sc_name)
-        rebuilt_data = self.subcon.build(ctx)
+        rebuilt_data = self.subcon.build(preprocessed_ctx)
         sys.stderr.write("writing %s...\n" % self.sc_name)
         f = open(os.path.join(self.args.output, f"{os.path.basename(str(input_path)[:-4])}"), "wb")
         f.write(rebuilt_data)

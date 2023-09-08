@@ -29,7 +29,7 @@ NDFType = Struct(
         0x00000005: "Float32" / Struct("value" / Float32l),
         0x00000006: "Float64" / Struct("value" / Float64l),
         0x00000007: "StringReference" / Struct("stringIndex" / Int32ul),
-        0x00000008: "WideString" / Struct("str" / PascalString(Int32ul, "utf-16")),
+        0x00000008: "WideString" / Struct("str" / PascalString(Int32ul, "utf-16-le")),
         0x00000009: "Reference" / Struct(
             "typeId" / Rebuild(Int32ul, this._switch_id_ref),
             "ref" / Switch(this.typeId, {
@@ -45,7 +45,7 @@ NDFType = Struct(
         0x0000000D: "Color" / Struct("r" / Int8ul, "g" / Int8ul, "b" / Int8ul, "a" / Int8ul),
         0x0000000E: "S32_vec3" / Struct("x" / Int32sl, "y" / Int32sl, "z" / Int32sl),
         0x0000000F: "Matrix" / Struct("Matrix" / Array(16, Float32l)),
-        0x00000011: "ListItem" / PrefixedArray(Int32ul, "ListItem" / LazyBound(lambda: NDFType)),
+        0x00000011: "List" / Struct("length" / Rebuild(Int32ul, len_(this.items)), "items" / LazyBound(lambda: NDFType)[this.length]),
         0x00000012: "Map" / Struct(
             "count" / Rebuild(Int32ul, len_(this.mapitem)),
             "mapitem" / Struct(
@@ -54,8 +54,8 @@ NDFType = Struct(
             )[this.count]),
         0x00000013: "Long" / Struct("value" / Int64ul),
         0x00000014: "Blob" / Struct(
-            "_size" / Int32ul,
-            "data" / Bytes(this._size),
+            "size" / Int32ul,
+            "data" / Bytes(this.size),
         ),
         0x00000018: "S16" / Struct("value" / Int16sl),
         0x00000019: "U16" / Struct("value" / Int16ul),
@@ -63,16 +63,16 @@ NDFType = Struct(
         0x0000001C: "PathReference" / Struct("stringIndex" / Int32ul),
         0x0000001D: "LocalisationHash" / Struct("data" / Bytes(8)),
         0x0000001E: "UnknownBlob" / Struct(  # StringBlob?
-            "_size" / Int32ul,
+            "size" / Int32ul,
             "unk0" / Int8ul,  # Const(b'\x01'),
             "data" / Switch(this.unk0, {
                 0: "Raw" / Struct(
-                    "data" / Bytes(this._._size)
+                    "data" / Bytes(this._.size)
                 ),
                 1: "Zlib" / Struct(
                     "uncompressedSize" / Int32ul,
                     # FIXME: Zero pad output of ZlibCompressed to `uncompressedSize`
-                    "data" / ZlibCompressed(Bytes(this._._size - 4)),
+                    "data" / ZlibCompressed(Bytes(this._.size - 4)),
                 )
             })
         ),
@@ -112,7 +112,7 @@ OBJETable = Struct(
     "pad0" / Const(b"\x00" * 4),
     "offset" / Rebuild(Int32ul, lambda foo: foo._._.headerSize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._objects_ptrsize),
+    "size" / Rebuild(Int32ul, lambda foo: foo._objects_meta._ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "objects" / Area("Object" / NDFObject, offset=this.offset, size=this.size),
 )
@@ -121,9 +121,9 @@ OBJETable = Struct(
 TOPOTable = Struct(
     "magic" / Magic(b"TOPO"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.OBJE.offset + foo._.OBJE._objects_ptrsize),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.OBJE.offset + foo._.OBJE._objects_meta._ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._topobjects_ptrsize),
+    "size" / Rebuild(Int32ul, lambda foo: foo._topobjects_meta._ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "topobjects" / Area("TopObject" / Struct(
         "objectIndex" / Int32ul,
@@ -134,9 +134,9 @@ TOPOTable = Struct(
 CHNKTable = Struct(
     "magic" / Magic(b"CHNK"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.TOPO.offset + foo._.TOPO._topobjects_ptrsize),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.TOPO.offset + foo._.TOPO._topobjects_meta._ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._chunks_ptrsize),
+    "size" / Rebuild(Int32ul, lambda foo: foo._chunks_meta._ptrsize),
     "pad2" / Const(b"\x00" * 4),
     # FIXME: check if unk0 is topOfObjectIndex
     "chunks" / Area("Chunk" / Struct(
@@ -149,9 +149,9 @@ CHNKTable = Struct(
 CLASTable = Struct(
     "magic" / Magic(b"CLAS"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.CHNK.offset + foo._.CHNK._chunks_ptrsize),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.CHNK.offset + foo._.CHNK._chunks_meta._ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._classes_ptrsize),
+    "size" / Rebuild(Int32ul, lambda foo: foo._classes_meta._ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "classes" / Area("Class" / Struct(
         "name" / PascalString(Int32ul, "utf-8"),
@@ -162,9 +162,9 @@ CLASTable = Struct(
 PROPTable = Struct(
     "magic" / Magic(b"PROP"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.CLAS.offset + foo._.CLAS._classes_ptrsize),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.CLAS.offset + foo._.CLAS._classes_meta._ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._properties_ptrsize),
+    "size" / Rebuild(Int32ul, lambda foo: foo._properties_meta._ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "properties" / Area("Property" / Struct(
         "name" / PascalString(Int32ul, "iso-8859-1"),
@@ -176,9 +176,9 @@ PROPTable = Struct(
 STRGTable = Struct(
     "magic" / Magic(b"STRG"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.PROP.offset + foo._.PROP._properties_ptrsize),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.PROP.offset + foo._.PROP._properties_meta._ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._strings_ptrsize),
+    "size" / Rebuild(Int32ul, lambda foo: foo._strings_meta._ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "strings" / Area("String" / Struct(
         "value" / PascalString(Int32ul, "iso-8859-1"),
@@ -189,9 +189,9 @@ STRGTable = Struct(
 TRANTable = Struct(
     "magic" / Magic(b"TRAN"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.STRG.offset + foo._.STRG._strings_ptrsize),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.STRG.offset + foo._.STRG._strings_meta._ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._trans_ptrsize),
+    "size" / Rebuild(Int32ul, lambda foo: foo._trans_meta._ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "trans" / Area("Tran" / Struct(
         "name" / PascalString(Int32ul, "iso-8859-1"),
@@ -201,19 +201,31 @@ TRANTable = Struct(
 IMPR = Struct(
     "tranIndex" / Int32ul,
     "objectIndex" / Int32ul,
-    "count" / Rebuild(Int32ul, len_(this.imprsizes)),
+    "count" / Rebuild(Int32ul, lambda ctx: len(ctx.imprs)),
+    "_impr_size" / Computed(lambda ctx: 12 + 4 * ctx.count + sum([x._impr_size for x in ctx.imprs]) if not ctx._parsing else 0),
     # sizes of following IMPR
-    "imprsizes" / Rebuild(Array(this.count, Int32ul), lambda ctx: [x._size for x in ctx.imprs]),
-    "imprs" / Array(this.count, LazyBound(lambda: IMPR))
+    "improffsets" / Rebuild(Array(this.count, Int32ul), lambda ctx: [4*ctx.count +
+                                                                     sum([x._impr_size for x in ctx.imprs[0:i]])
+                                                                     for i in range(ctx.count) if ctx.count > 0
+                                                                    ]),
+    "imprs" / Array(this.count, LazyBound(lambda: IMPR)),
 )
+#IMPR = Struct(
+#    "tranIndex" / Int32ul,
+#    "objectIndex" / Int32ul,
+#    "count" / Int32ul,
+#    # sizes of following IMPR
+#    "improffsets" / Array(this.count, Int32ul),
+#    "imprs" / Array(this.count, LazyBound(lambda: IMPR)),
+#)
 
 # eight table
 IMPRTable = Struct(
     "magic" / Magic(b"IMPR"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.TRAN.offset + foo._.TRAN._trans_ptrsize),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.TRAN.offset + foo._.TRAN._trans_meta._ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._imprs_ptrsize),
+    "size" / Rebuild(Int32ul, lambda foo: foo._imprs_meta._ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "imprs" / Area("Impr" / IMPR, offset=this.offset, size=this.size),
 )
@@ -222,9 +234,9 @@ IMPRTable = Struct(
 EXPRTable = Struct(
     "magic" / Magic(b"EXPR"),
     "pad0" / Const(b"\x00" * 4),
-    "offset" / Rebuild(Int32ul, lambda foo: foo._.IMPR.offset + foo._.IMPR._imprs_ptrsize),
+    "offset" / Rebuild(Int32ul, lambda foo: foo._.IMPR.offset + foo._.IMPR._imprs_meta._ptrsize),
     "pad1" / Const(b"\x00" * 4),
-    "size" / Rebuild(Int32ul, lambda foo: foo._exprs_ptrsize),
+    "size" / Rebuild(Int32ul, lambda foo: foo._exprs_meta._ptrsize),
     "pad2" / Const(b"\x00" * 4),
     "exprs" / Area("Expr" / IMPR, offset=this.offset, size=this.size),
 )
@@ -250,7 +262,7 @@ NdfBin = Struct(
     "compressed" / Enum(Int32ul, uncompressed=0x0, compressed=0x80),
     "toc0offset" / Int32ul,
     "unk0" / Int32ul,
-    "headerSize" / Rebuild(Int32ul, this._size),
+    "headerSize" / Rebuild(Int32ul, this._unk4_meta._endoffset), # should be 40 always
     "unk2" / Int32ul,
     "size" / Int32ul,
     "unk4" / Int32ul,

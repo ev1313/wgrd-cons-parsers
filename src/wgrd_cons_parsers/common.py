@@ -65,7 +65,7 @@ class CommonMain:
         xml = ET.fromstring(data.decode("utf-8"))
         sys.stderr.write("rebuilding from xml...\n")
         ctx = self.add_extra_args(input_path)
-        ctx = self.subcon.fromET(xml)
+        ctx = self.subcon.fromET(xml, **ctx)
         preprocessed_ctx, _ = self.subcon.preprocess(ctx)
         del xml
         del ctx

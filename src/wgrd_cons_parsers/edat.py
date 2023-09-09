@@ -18,13 +18,13 @@ EDat = Struct(
     "magic" / Magic(b"edat"),
     "unk0" / Const(2, Int32ul), # number of tables maybe?
     "pad0" / Padding(17),
-    "offset_files" / Rebuild(Int32ul, this._files_dictionary_offset),
-    "size_files" / Rebuild(Int32ul, this._files_dictionary_size),
-    "offset_data" / Rebuild(Int32ul, this._files_offset),
-    "size_data" / Rebuild(Int32ul, this._files_size),
+    "offset_files" / Rebuild(Int32ul, this._files_meta._dictionary_offset),
+    "size_files" / Rebuild(Int32ul, this._files_meta._dictionary_size),
+    "offset_data" / Rebuild(Int32ul, this._files_meta._offset),
+    "size_data" / Rebuild(Int32ul, this._files_meta._size),
     "pad1" / Padding(4),
     "sectorSize" / Int32ul,
-    "checksum" / Rebuild(Bytes(16), this._files_dictionary_checksum), # md5 checksum of the whole files section
+    "checksum" / Rebuild(Bytes(16), this._files_meta._dictionary_checksum), # md5 checksum of the whole files section
     "pad2" / Padding(972),
     "files" / FileDictionary(EDatFileHeader, this.offset_files, this.size_files, this.offset_data, this.size_data, this.sectorSize),
     #"data" /

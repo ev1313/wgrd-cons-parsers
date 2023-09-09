@@ -236,7 +236,7 @@ class Dictionary(Construct):
         # FIXME: maybe just return correctly sorted dictionary
         return sorted_obj
 
-    def _sizeof(self, context, path):
+    def _sizeof(self, obj, context, path):
         raise SizeofError(f"Dictionary doesn't support sizeof {path}")
 
     def _toET(self, parent, name, context, path):
@@ -371,7 +371,7 @@ class FileDictionary(Dictionary):
         self._current_offset=0
         super()._build(obj, stream, context, path)
 
-    def _preprocess(self, obj, context, path, offset=0):
+    def _preprocess_size(self, obj: Container, context: Container, path: str, offset: int=0):
         sector_size = self.sector_size(context) if callable(self.sector_size) else self.sector_size
 
         # build dictionary to get size of it
@@ -408,7 +408,7 @@ class FileDictionary(Dictionary):
         elems = parent.findall("File")
         context[name] = {}
         for elem in elems:
-            inpath = ctx_get_opt(context, "_cons_xml_input_directory", None)
+            inpath = ctx_get_opt(context, "_cons_xml_input_directory", ".")
 
             path = elem.attrib["path"]
             filepath = os.path.join(inpath, path.replace("\\", os.sep).replace("\\\\", os.sep))

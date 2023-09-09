@@ -9,6 +9,10 @@ import pathlib
 from io import BytesIO
 
 from dingsda import *
+from dingsda.string import *
+from dingsda.lazy import *
+
+from cons_utils import *
 
 from .common import *
 from .dictionary import *
@@ -25,7 +29,7 @@ def Header(subcon):
         "size" / Int32ul,
         "data" / Pointer(this.offset, subcon),
     )
-    return H
+    return EmptyHeader
 
 
 EmptyHeaderWithCount = Struct(
@@ -38,11 +42,11 @@ EmptyHeaderWithCount = Struct(
 def HeaderWithCount(subcon, offset):
     HWC = Struct(
         "offset" / Rebuild(Int32ul, offset),
-        "size" / Rebuild(Int32ul, this._ptrsize_data),
+        "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
         "count" / Rebuild(Int32ul, len_(this.data)),
         "data" / Pointer(this.offset, subcon)
     )
-    return HWC
+    return EmptyHeaderWithCount
 
 
 FileItem = Struct(
@@ -65,7 +69,7 @@ VertexFormat = Struct(
 
 VertexFormatHeader = Struct(
     "offset" / Rebuild(Int32ul, this._.files.offset + this._.files.size),
-    "size" / Rebuild(Int32ul, this._ptrsize_data),
+    "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
     "count" / Rebuild(Int32ul, len_(this.data.formats)),
     "data" / Pointer(this.offset, VertexFormat)
 )
@@ -108,7 +112,7 @@ DrawCall = Struct(
 
 IbufHeader = Struct(
     "offset" / Rebuild(Int32ul, lambda ctx: 0 if ctx._index == 0 else ctx._.data[ctx._index-1].offset + ctx._.data[ctx._index-1].size),
-    "size" / Rebuild(Int32ul, this._ptrsize_data),
+    "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
     "count" / Int32ul,
     "unk1" / Const(0x1, Int16ul),
     "compressed" / Enum(Int16ul, uncompressed=0x0, compressed=0xC000),
@@ -117,7 +121,7 @@ IbufHeader = Struct(
 
 VbufHeader = Struct(
     "offset" / Rebuild(Int32ul, lambda ctx: 0 if ctx._index == 0 else ctx._.data[ctx._index-1].offset + ctx._.data[ctx._index-1].size),
-    "size" / Rebuild(Int32ul, this._ptrsize_data),
+    "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
     "count" / Int32ul,
     "vertexFormatIndex" / Int16ul,
     "compressed" / Enum(Int16ul, uncompressed=0x0, compressed=0xC000),
@@ -126,7 +130,7 @@ VbufHeader = Struct(
 
 NodeHeader = Struct(
     "offset" / Rebuild(Int32ul, lambda ctx: 0 if ctx._index == 0 else ctx._.data[ctx._index-1].offset + ctx._.data[ctx._index-1].size),
-    "size" / Rebuild(Int32ul, this._ptrsize_data),
+    "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
     "data" / Lazy(Pointer(this._._.nodesData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"nodes/node_{ctx._index}_{ctx.offset}_{ctx.size}.bin")))
 )
 

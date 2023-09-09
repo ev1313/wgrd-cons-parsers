@@ -4,6 +4,8 @@ from io import BytesIO
 import xml.etree.ElementTree as ET
 
 from dingsda import *
+from dingsda.string import *
+from dingsda.helpers import *
 
 import os
 import hashlib

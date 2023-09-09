@@ -4,6 +4,8 @@ import xml.etree.ElementTree as ET
 
 from dingsda import *
 from dingsda.lib import *
+from dingsda.helpers import *
+from dingsda.string import *
 
 import zlib
 from functools import partial

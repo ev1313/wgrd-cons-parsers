@@ -2,6 +2,8 @@
 
 from .dictionary import *
 
+from dingsda import *
+
 from .common import CommonMain
 
 EDatFileHeader = Struct(

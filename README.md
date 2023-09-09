@@ -20,3 +20,12 @@ python -m wgrd_cons_parser.edat NDF_Win.dat
 # repack gamefile from the out/ directory
 python -m wgrd_cons_parser.edat -p out/NDF_Win.dat.xml
 ```
+
+## Performance
+
+Currently unpacking the everything.ndfbin uses about 14 GB of RAM and takes about 2 minutes on my machine.
+
+It is recommended to use the pypy3 Python runtime, because it significantly increases the performance:
+
+https://www.pypy.org/
+

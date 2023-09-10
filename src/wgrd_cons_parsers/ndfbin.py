@@ -12,7 +12,7 @@ from dingsda import *
 from dingsda.string import PascalString
 from dingsda.lazy import LazyBound
 
-from cons_utils import *
+from .cons_utils import *
 
 from .compress_ndfbin import compress_ndfbin
 from .decompress_ndfbin import decompress_ndfbin

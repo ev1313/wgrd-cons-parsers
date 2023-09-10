@@ -11,7 +11,7 @@ Ess = Struct(
     "channels" / Int8ub,
     "samplerate" / Int16ub,
     "frameCount" / Int32ub,
-    "pad" / Const(b"\x00"*4),
+    "unk1" / Int32ul, # often 0x0, however sometimes set - loopstart?
     "frameCount2" / Int32ub,
     "blockOffsets" / RepeatUntil(lambda obj,lst,ctx: obj == 0, Int32ub),
     "padding" / Const(b"\x00"*16),

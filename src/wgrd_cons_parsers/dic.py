@@ -2,6 +2,9 @@
 
 from .common import *
 
+from dingsda import *
+from dingsda.string import *
+
 Dic = Struct(
     "magic" / Const(b"TRAD"),
     "count" / Rebuild(Int32ul, len_(this.entries)),

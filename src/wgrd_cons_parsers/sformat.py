@@ -15,7 +15,7 @@ SFormat = Struct(
     "frameCount" / Int32ul,
     "length" / Int32ul,
     "essLength" / Int32ul,
-    "essUnk2" / Int32ul,
+    "essUnk2" / Int32ul, # loopstart?
     "frameCount2" / Int32ul,
     "data" / If(lambda ctx: ctx.isShort == "false",
                Struct(

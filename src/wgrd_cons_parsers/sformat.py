@@ -13,7 +13,7 @@ SFormat = Struct(
     "unk3" / Int16ul, # channelCount * 0x200
     "samplerate" / Int16ul,
     "frameCount" / Int32ul,
-    "length" / Int32ul,
+    "unk4" / Int32ul,
     "essLength" / Int32ul,
     "essUnk2" / Int32ul, # loopstart?
     "frameCount2" / Int32ul,

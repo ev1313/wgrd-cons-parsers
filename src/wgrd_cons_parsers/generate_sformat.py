@@ -5,8 +5,16 @@ import pdb
 from .ess import *
 from .sformat import *
 
+import argparse
+
 if __name__ == "__main__":
-    essfile = open(sys.argv[1], "rb")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path", type=pathlib.Path, help="path to the ess file")
+    parser.add_argument("-o", "--output", type=pathlib.Path, default="test.sformat",
+                        help="path to the output sformat file")
+    args = parser.parse_args()
+
+    essfile = open(args.path, "rb")
     essdata = essfile.read()
 
     ess_header = Ess.parse(essdata)
@@ -18,7 +26,7 @@ if __name__ == "__main__":
               unk3=ess_header.channels*0x200,
               samplerate=ess_header.samplerate,
               frameCount=ess_header.frameCount,
-              length=2,
+              unk4=2,
               essLength=len(essdata),
               essUnk2=0,
               frameCount2=ess_header.frameCount,
@@ -26,5 +34,5 @@ if __name__ == "__main__":
 
     sformatdata = SFormat.build(sformat)
 
-    sformatfile = open(sys.argv[2], "wb")
+    sformatfile = open(args.output, "wb")
     sformatfile.write(sformatdata)

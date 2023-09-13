@@ -3,6 +3,7 @@
 ### Sound files in Eugen Games
 
 There are three file types for sounds:
+
  - ess -> these are essentially eugens custom audio container format, comparable to wav/ogg files
  - mpk -> these are just edat files with custom name, you can unpack them with wgrd_cons_parsers.edat
  - sformat -> these files contain extra information for the sound file. Often they contain only the same info as the ess header, but sometimes there is (probably) an [amplitude envelope](https://en.wikipedia.org/wiki/Envelope_(waves)) in there.

@@ -73,7 +73,9 @@ class CommonMain:
         sys.stderr.write("building %s...\n" % self.sc_name)
         rebuilt_data = self.subcon.build(preprocessed_ctx)
         sys.stderr.write("writing %s...\n" % self.sc_name)
-        f = open(os.path.join(self.args.output, f"{os.path.basename(str(input_path)[:-4])}"), "wb")
+        file_path = os.path.join(self.args.output, f"{os.path.basename(str(input_path)[:-4])}")
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        f = open(file_path, "wb")
         f.write(rebuilt_data)
         f.close()
 

@@ -12,8 +12,7 @@ The parsers are not complete yet, if you encounter any issues, please open an is
 ## Usage
 
 ``` sh
-pip install -r requirements.txt
-pip install wgrd_cons_parser
+pip install wgrd_cons_parsers
 
 # unpack gamefile
 python -m wgrd_cons_parser.edat NDF_Win.dat
@@ -29,3 +28,19 @@ It is recommended to use the pypy3 Python runtime, because it significantly incr
 
 https://www.pypy.org/
 
+## Development
+
+If you want to change the scripts easily, you can install them locally:
+
+``` sh
+git clone https://github.com/ev1313/wgrd-cons-parsers.git
+cd wgrd-cons-parsers
+pip install -e .
+
+# unpack gamefile
+python -m wgrd_cons_parser.edat NDF_Win.dat
+# repack gamefile from the out/ directory
+python -m wgrd_cons_parser.edat -p out/NDF_Win.dat.xml
+```
+
+With this setup you can modify the scripts and still use them.

@@ -15,9 +15,9 @@ The parsers are not complete yet, if you encounter any issues, please open an is
 pip install wgrd_cons_parsers
 
 # unpack gamefile
-python -m wgrd_cons_parser.edat NDF_Win.dat
+python -m wgrd_cons_parsers.edat NDF_Win.dat
 # repack gamefile from the out/ directory
-python -m wgrd_cons_parser.edat -p out/NDF_Win.dat.xml
+python -m wgrd_cons_parsers.edat -p out/NDF_Win.dat.xml
 ```
 
 ## Performance
@@ -38,9 +38,9 @@ cd wgrd-cons-parsers
 pip install -e .
 
 # unpack gamefile
-python -m wgrd_cons_parser.edat NDF_Win.dat
+python -m wgrd_cons_parsers.edat NDF_Win.dat
 # repack gamefile from the out/ directory
-python -m wgrd_cons_parser.edat -p out/NDF_Win.dat.xml
+python -m wgrd_cons_parsers.edat -p out/NDF_Win.dat.xml
 ```
 
 With this setup you can modify the scripts and still use them.

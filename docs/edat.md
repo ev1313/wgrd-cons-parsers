@@ -67,14 +67,15 @@ The directory structure of Wargame is as follows:
              - ZZ_4.dat - some ppk files
         - 49125/
 
-        - 49964/
-
+        - 49964/58710
+	     - Where latest ZZ files are except ZZ_1
         - 58710/
 
         - 59095/
         - 59638/
         - 68335/
         - 72352/
+             - Current latest folder for NDF_Win.dat
 
 - Maps/Wargame/PC/
     - for each map / campaign one dat file

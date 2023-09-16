@@ -21,7 +21,7 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: edat.exe
+        name: edat
         path: dist/edat/
     - uses: actions/upload-artifact@v2
       with:

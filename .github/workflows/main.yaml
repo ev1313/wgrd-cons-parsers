@@ -21,6 +21,10 @@ jobs:
     - run: pyinstaller src/wgrd_cons_parsers/ndfbin.py
     - run: pyinstaller src/wgrd_cons_parsers/tgv.py
     - run: pyinstaller src/wgrd_cons_parsers/ppk.py
+    - run: pyinstaller src/wgrd_cons_parsers/ess.py
+    - run: pyinstaller src/wgrd_cons_parsers/sformat.py
+    - run: pyinstaller src/wgrd_cons_parsers/dic.py
+    - run: pyinstaller src/wgrd_cons_parsers/scenario.py
     - uses: actions/upload-artifact@v2
       with:
         path: dist/*/*.exe

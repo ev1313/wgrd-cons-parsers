@@ -18,6 +18,9 @@ jobs:
 
     - run: pip install -r requirements.txt pyinstaller
     - run: pyinstaller src/wgrd_cons_parsers/edat.py
+    - run: pyinstaller src/wgrd_cons_parsers/ndfbin.py
+    - run: pyinstaller src/wgrd_cons_parsers/tgv.py
+    - run: pyinstaller src/wgrd_cons_parsers/ppk.py
     - uses: actions/upload-artifact@v2
       with:
-        path: dist/*
+        path: dist/*/*.exe

@@ -13,10 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: PyInstaller Windows
+    - name: PyInstaller Windows EDat
       uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
       with:
         path: .
+        spec: edat.spec
 
     - uses: actions/upload-artifact@v2
       with:

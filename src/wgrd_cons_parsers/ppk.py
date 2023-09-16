@@ -13,7 +13,7 @@ PPKTexture = Struct(
     "xea" / Int16ul,
     "xeb" / Int16ul,
     "xf" / Const(0, Int32ul),
-    "tgvdata" / Pointer(lambda ctx: ctx.offset + ctx._.tex_offset, Bytes(lambda ctx: ctx.size)),
+    "tgvdata" / Pointer(lambda ctx: ctx.offset + ctx._.tex_offset, File(Bytes(lambda ctx: ctx.size), lambda ctx: f"ppk/{ctx.id}_{ctx.xea}_{ctx.xeb}_{ctx.xf}.tgv")),
 )
 
 PPKPath = Struct(

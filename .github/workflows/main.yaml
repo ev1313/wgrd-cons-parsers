@@ -8,22 +8,16 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
-    - name: PyInstaller Windows EDat
-      uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
+    - uses: actions/setup-python@v2
       with:
-        path: .
-        spec: edat.spec
+        python-version: 3.11
 
+    - run: pip install -r requirements.txt pyinstaller
+    - run: pyinstaller src/wgrd_cons_parsers/edat.py
     - uses: actions/upload-artifact@v2
       with:
-        name: edat
-        path: dist/edat/
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ndfbin
-        path: dist/ndfbin
+        path: dist/*

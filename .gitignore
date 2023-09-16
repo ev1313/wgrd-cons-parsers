@@ -10,4 +10,5 @@ output.log
 venv/
 dist
 build
+*.spec
 *.egg-info

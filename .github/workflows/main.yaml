@@ -21,8 +21,8 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: edat
-        path: dist/edat
+        name: edat.exe
+        path: dist/edat/
     - uses: actions/upload-artifact@v2
       with:
         name: ndfbin

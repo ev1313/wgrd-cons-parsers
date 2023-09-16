@@ -1,0 +1,28 @@
+name: Package Application with Pyinstaller
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: PyInstaller Windows
+      uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
+      with:
+        path: src
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: edat
+        path: src/dist/edat
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ndfbin
+        path: src/dist/ndfbin

@@ -8,23 +8,29 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['windows-latest', 'ubuntu-latest']
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
       with:
         python-version: 3.11
-
+    - uses: crazy-max/ghaction-upx@v3
+      with:
+        install-only: true
     - run: pip install -r requirements.txt pyinstaller
-    - run: pyinstaller src/wgrd_cons_parsers/edat.py
-    - run: pyinstaller src/wgrd_cons_parsers/ndfbin.py
-    - run: pyinstaller src/wgrd_cons_parsers/tgv.py
-    - run: pyinstaller src/wgrd_cons_parsers/ppk.py
-    - run: pyinstaller src/wgrd_cons_parsers/ess.py
-    - run: pyinstaller src/wgrd_cons_parsers/sformat.py
-    - run: pyinstaller src/wgrd_cons_parsers/dic.py
-    - run: pyinstaller src/wgrd_cons_parsers/scenario.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/edat.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/ndfbin.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/tgv.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/ppk.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/ess.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/sformat.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/dic.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/scenario.py
     - uses: actions/upload-artifact@v2
       with:
         path: dist/*

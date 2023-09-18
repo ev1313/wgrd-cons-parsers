@@ -11,6 +11,8 @@ import xml.etree.ElementTree as ET
 
 import gc
 
+from version import *
+
 class CommonMain:
     def __init__(self, subcon: Construct, sc_name: str):
         self.parser = argparse.ArgumentParser()
@@ -52,6 +54,7 @@ class CommonMain:
         ctx = ctx | self.add_extra_args(input_path)
         sys.stderr.write(f"generating xml...\n")
         xml = self.subcon.toET(ctx, name=self.sc_name, is_root=True)
+        xml.attrib["_wgrd_cons_parsers_version"] = version_string
         sys.stderr.write("indenting xml...\n")
         ET.indent(xml, space="  ", level=0)
         s = ET.tostring(xml).decode("utf-8")

@@ -9,7 +9,24 @@ gamefiles, a fork of the Construct library.
 
 The parsers are not complete yet, if you encounter any issues, please open an issue on GitHub.
 
+For actual modding of Wargame the [Toolsuite](https://github.com/ev1313/wgrd-cons-tools) is recommended.
+You'll find documentation for these tools [here](https://wgrd-cons-tools.readthedocs.io).
+
 ## Usage
+
+There are prebuilt binaries for Windows and Linux available on the 
+[releases page](https://github.com/ev1313/wgrd-cons-parsers/releases).
+
+With these you can just use them like this:
+
+``` sh
+# unpack gamefile
+edat.exe NDF_Win.dat -o out/
+# repack gamefile from the out/ directory
+edat.exe -p out/NDF_Win.dat.xml -o out/
+```
+
+If you have a working Python Installation you can install the current release of the scripts with pip from PyPi:
 
 ``` sh
 pip install wgrd_cons_parsers

@@ -16,6 +16,8 @@ TGV = Struct(
     "height" / Int32ul,
     "imageWidth" / Int32ul,
     "imageHeight" / Int32ul,
+    Check(lambda ctx: ctx.imageWidth == ctx.width),
+    Check(lambda ctx: ctx.imageHeight == ctx.height),
     "mipmapCount" / Rebuild(Int16ul, lambda ctx: len(ctx.images)),
     "pixelFormatName" / Aligned(7, PascalString(Int16ul, "utf-8")),
     "checksum" / Bytes(16),

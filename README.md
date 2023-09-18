@@ -1,4 +1,4 @@
-# Wargame Red Dragon Parsers
+# Wargame: Red Dragon Parsers
 
 This is a collection of parsers for the gamefiles of the game "Wargame Red Dragon" by Eugen Systems.
 

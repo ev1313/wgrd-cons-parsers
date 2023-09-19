@@ -12,7 +12,7 @@ from dingsda import *
 from dingsda.string import *
 from dingsda.lazy import *
 
-from cons_utils import *
+from .cons_utils import *
 
 from .common import *
 from .dictionary import *

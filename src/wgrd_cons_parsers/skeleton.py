@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from .common import *
+from wgrd_cons_parsers.common import *
 
 Matrix3x4 = Struct(
     "row0" / Array(4, Float32l),

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from .common import *
+from wgrd_cons_parsers.common import *
 
-from .skeleton import Skeleton
+from wgrd_cons_parsers.skeleton import Skeleton
 
 Baf = Struct(
     "unk0" / Int32ul,

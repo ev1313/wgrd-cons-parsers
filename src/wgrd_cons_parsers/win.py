@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from .common import *
+from wgrd_cons_parsers.common import *
 
 BBOX = Struct(
     "a1" / Int32ul, # Probably float!

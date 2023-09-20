@@ -4,8 +4,8 @@ import pdb
 
 from dingsda import *
 from dingsda.lib import *
-from .cons_utils import *
-from .common import CommonMain
+from wgrd_cons_parsers.cons_utils import *
+from wgrd_cons_parsers.common import CommonMain
 
 WargameProfile = Struct(
     "magic" / Magic(b"ESAV"),

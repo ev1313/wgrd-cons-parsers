@@ -3,7 +3,7 @@ import pdb
 import sys
 from dingsda import *
 
-from .cons_utils import *
+from wgrd_cons_parsers.cons_utils import *
 
 def compress_ndfbin(data, update_header=False):
     header = Struct(

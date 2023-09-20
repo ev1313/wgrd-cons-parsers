@@ -12,10 +12,10 @@ from dingsda import *
 from dingsda.string import *
 from dingsda.lazy import *
 
-from .cons_utils import *
+from wgrd_cons_parsers.cons_utils import *
 
-from .common import *
-from .dictionary import *
+from wgrd_cons_parsers.common import *
+from wgrd_cons_parsers.dictionary import *
 
 EmptyHeader = Struct(
     "offset" / Int32ul,

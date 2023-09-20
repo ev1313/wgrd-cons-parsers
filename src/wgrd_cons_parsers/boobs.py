@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from .common import *
+from wgrd_cons_parsers.common import *
 
 foo = 0
 def StructArray(count, struct):

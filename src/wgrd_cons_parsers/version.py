@@ -1,3 +1,1 @@
-import importlib.metadata
-
-version_string = importlib.metadata.version("wgrd-cons-parsers")
+version_string = "0.2.6"

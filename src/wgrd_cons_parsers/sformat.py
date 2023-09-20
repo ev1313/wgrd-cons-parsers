@@ -2,7 +2,7 @@
 
 from dingsda import *
 
-from .common import *
+from wgrd_cons_parsers.common import *
 
 
 SFormat = Struct(

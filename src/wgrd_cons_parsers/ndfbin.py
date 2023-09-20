@@ -12,12 +12,12 @@ from dingsda import *
 from dingsda.string import PascalString
 from dingsda.lazy import LazyBound
 
-from .cons_utils import *
+from wgrd_cons_parsers.cons_utils import *
 
-from .compress_ndfbin import compress_ndfbin
-from .decompress_ndfbin import decompress_ndfbin
+from wgrd_cons_parsers.compress_ndfbin import compress_ndfbin
+from wgrd_cons_parsers.decompress_ndfbin import decompress_ndfbin
 
-from .common import CommonMain
+from wgrd_cons_parsers.common import CommonMain
 
 NDFType = Struct(
     "typeId" / Rebuild(Int32ul, this._switch_id_data),

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from .common import *
+from wgrd_cons_parsers.common import *
 
 from dingsda import *
 from dingsda.helpers import *

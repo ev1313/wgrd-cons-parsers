@@ -2,7 +2,7 @@
 
 from dingsda import *
 
-from .common import *
+from wgrd_cons_parsers.common import *
 
 Ess = Struct(
     # FIXME: is this really a version number or maybe something else?

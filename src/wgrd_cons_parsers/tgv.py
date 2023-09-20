@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from .common import *
+from wgrd_cons_parsers.common import *
 
 from dingsda import *
 from dingsda.string import *
 
-from .utils import align
-from .cons_utils import File
+from wgrd_cons_parsers.utils import align
+from wgrd_cons_parsers.cons_utils import File
 
 TGV = Struct(
     "version" / Int32ul,

@@ -27,9 +27,9 @@ def Header(subcon):
     H = Struct(
         "offset" / Int32ul,
         "size" / Int32ul,
-        "data" / Pointer(this.offset, subcon),
+        "data" / Area(subcon, offset=this.offset, size=this.size)
     )
-    return EmptyHeader
+    return H
 
 
 EmptyHeaderWithCount = Struct(
@@ -44,9 +44,9 @@ def HeaderWithCount(subcon, offset):
         "offset" / Rebuild(Int32ul, offset),
         "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
         "count" / Rebuild(Int32ul, len_(this.data)),
-        "data" / Pointer(this.offset, subcon)
+        "data" / Area(subcon, offset=this.offset, size=this.size, count=this.count)
     )
-    return EmptyHeaderWithCount
+    return HWC
 
 
 FileItem = Struct(
@@ -110,13 +110,25 @@ DrawCall = Struct(
     "unk1" / Const(0xCDCD, Int16ul),
 )
 
+IbufDataHeader = Struct(
+    "offset" / Int32ul,
+    "size" / Int32ul,
+    "data" / Array(this._.IbufHeader.count,
+                   "IbufData" / Pointer(lambda ctx: ctx.offset + ctx._.IbufHeader.data[ctx._index].offset,
+                                        File(Bytes(lambda ctx: ctx._.IbufHeader.data[ctx._index].size),
+                                             lambda ctx: f"ibufs/ibuf_{ctx._index}_{ctx._.IbufHeader.data[ctx._index].compressed}.bin"))
+                                            )
+                                        )
+                )
+)
+
 IbufHeader = Struct(
     "offset" / Rebuild(Int32ul, lambda ctx: 0 if ctx._index == 0 else ctx._.data[ctx._index-1].offset + ctx._.data[ctx._index-1].size),
     "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
     "count" / Int32ul,
     "unk1" / Const(0x1, Int16ul),
     "compressed" / Enum(Int16ul, uncompressed=0x0, compressed=0xC000),
-    "data" / Lazy(Pointer(this._._.ibufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"ibufs/ibuf_{ctx._index}_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
+    #"data" / Lazy(Pointer(this._._.ibufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"ibufs/ibuf_{ctx._index}_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
 )
 
 VbufHeader = Struct(
@@ -125,13 +137,13 @@ VbufHeader = Struct(
     "count" / Int32ul,
     "vertexFormatIndex" / Int16ul,
     "compressed" / Enum(Int16ul, uncompressed=0x0, compressed=0xC000),
-    "data" / Lazy(Pointer(this._._.vbufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"vbufs/vbuf_{ctx._index}_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
+    #"data" / Lazy(Pointer(this._._.vbufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"vbufs/vbuf_{ctx._index}_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
 )
 
 NodeHeader = Struct(
     "offset" / Rebuild(Int32ul, lambda ctx: 0 if ctx._index == 0 else ctx._.data[ctx._index-1].offset + ctx._.data[ctx._index-1].size),
     "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
-    "data" / Lazy(Pointer(this._._.nodesData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"nodes/node_{ctx._index}_{ctx.offset}_{ctx.size}.bin")))
+    #"data" / Lazy(Pointer(this._._.nodesData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"nodes/node_{ctx._index}_{ctx.offset}_{ctx.size}.bin")))
 )
 
 Spk = Struct(
@@ -145,15 +157,15 @@ Spk = Struct(
     "files" / HeaderWithCount(Dictionary("FileItem" / FileItem, this.offset, this.size), this._._endoffset_unknown10indices),
     "vertexFormats" / VertexFormatHeader,
     "materials" / HeaderWithCount(File(Bytes(this.size), lambda ctx: "materials.ndfbin"), this._.vertexFormats.offset + this._.vertexFormats.size),
-    "unknown0" / HeaderWithCount(Array(this.count, Unknown0), this._.materials.offset + this._.materials.size),
-    "unknown1" / HeaderWithCount(Array(this.count, Unknown1), this._.unknown0.offset + this._.unknown0.size),
-    "meshes" / HeaderWithCount(Array(this.count, "Mesh" / Mesh), this._.unknown1.offset + this._.unknown1.size),
-    "drawCalls" / HeaderWithCount(Array(this.count, "DrawCall" / DrawCall), this._.meshes.offset + this._.meshes.size),
-    "ibufTable" / HeaderWithCount(Array(this.count, "Ibuf" / IbufHeader), this._.drawCalls.offset + this._.drawCalls.size),
-    "ibufData" / EmptyHeader,
-    "vbufTable" / HeaderWithCount(Array(this.count, "Vbuf" / VbufHeader), this._.ibufTable.offset + this._.ibufTable.size),
+    "unknown0" / HeaderWithCount(Unknown0, this._.materials.offset + this._.materials.size),
+    "unknown1" / HeaderWithCount(Unknown1, this._.unknown0.offset + this._.unknown0.size),
+    "meshes" / HeaderWithCount("Mesh" / Mesh, this._.unknown1.offset + this._.unknown1.size),
+    "drawCalls" / HeaderWithCount("DrawCall" / DrawCall, this._.meshes.offset + this._.meshes.size),
+    "ibufTable" / HeaderWithCount("Ibuf" / IbufHeader, this._.drawCalls.offset + this._.drawCalls.size),
+    "ibufData" / IbufDataHeader,
+    "vbufTable" / HeaderWithCount("Vbuf" / VbufHeader, this._.ibufTable.offset + this._.ibufTable.size),
     "vbufData" / EmptyHeader,
-    "nodesTable" / HeaderWithCount(Array(this.count, "Node" / NodeHeader), this._.vbufTable.offset + this._.vbufTable.size),
+    "nodesTable" / HeaderWithCount("Node" / NodeHeader, this._.vbufTable.offset + this._.vbufTable.size),
     "nodesData" / EmptyHeader,
     "unknown10" / HeaderWithCount(Bytes(this.size), this._.nodesTable.offset + this._.nodesTable.size),
     "unknown10indices" / HeaderWithCount(Bytes(this.size), this._.unknown10.offset + this._.unknown10.size),

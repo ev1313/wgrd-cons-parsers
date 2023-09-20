@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 
 import gc
 
-from .version import *
+from wgrd_cons_parsers.version import *
 
 class CommonMain:
     def __init__(self, subcon: Construct, sc_name: str):

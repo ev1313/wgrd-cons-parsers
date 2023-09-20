@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from .dictionary import *
+from wgrd_cons_parsers.dictionary import *
 
 from dingsda import *
 
-from .common import CommonMain
+from wgrd_cons_parsers.common import CommonMain
 
 EDatFileHeader = Struct(
     "offset" / Int32ul,

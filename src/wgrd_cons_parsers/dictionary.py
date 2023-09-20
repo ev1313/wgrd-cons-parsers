@@ -244,12 +244,9 @@ class Dictionary(Construct):
         assert (parent is not None)
 
         files = get_current_field(context, name)
-        for path, file in files.items():
-            ctx = Container(_=context, **files)
-            ctx[name] = file
-            ctx["_root"] = context
-            elem = self.subcon.toET(context=ctx, name=name, parent=None)
-            elem.attrib["path"] = path
+        for dpath, file in files.items():
+            elem = self.subcon.toET(obj=file, name=name)
+            elem.attrib["path"] = dpath
             assert(elem is not None)
             parent.append(elem)
 

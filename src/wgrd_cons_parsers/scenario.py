@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from wgrd_cons_parsers.common import *
+from dingsda import *
 
 Gdp0 = Struct(
         "magic" / Const(b'GDP0'),

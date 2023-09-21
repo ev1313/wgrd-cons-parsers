@@ -24,6 +24,8 @@ def compress_ndfbin(data, update_header=False):
     if update_header:
         parsed_ndfbin.compressed = "compressed"
 
+    # FIXME: hardcoded values for WGRD
+    parsed_ndfbin.toc0Offset = len(data) - 224
     parsed_ndfbin.size = len(data)
     parsed_ndfbin.uncompressedSize = len(data) - 40
 

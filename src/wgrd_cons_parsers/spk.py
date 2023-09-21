@@ -116,10 +116,9 @@ IbufDataHeader = Struct(
     "data" / Array(this._.IbufHeader.count,
                    "IbufData" / Pointer(lambda ctx: ctx.offset + ctx._.IbufHeader.data[ctx._index].offset,
                                         File(Bytes(lambda ctx: ctx._.IbufHeader.data[ctx._index].size),
-                                             lambda ctx: f"ibufs/ibuf_{ctx._index}_{ctx._.IbufHeader.data[ctx._index].compressed}.bin"))
+                                             lambda ctx: f"ibufs/ibuf_{ctx._index}_{ctx._.IbufHeader.data[ctx._index].compressed}.bin")
                                             )
-                                        )
-                )
+                                        ),
 )
 
 IbufHeader = Struct(

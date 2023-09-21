@@ -261,11 +261,11 @@ NdfBin = Struct(
     "magic3" / Magic(b"CNDF"),
     "compressed" / Enum(Int32ul, uncompressed=0x0, compressed=0x80),
     "toc0offset" / Int32ul,
-    "unk0" / Int32ul,
+    "unk0" / Int32ul, # 0x0
     "headerSize" / Rebuild(Int32ul, this._unk4_meta._endoffset), # should be 40 always
-    "unk2" / Int32ul,
+    "unk2" / Int32ul, # 0x0
     "size" / Int32ul,
-    "unk4" / Int32ul,
+    "unk4" / Int32ul, # 0x0
     # this stuff now comes, because of the decompression, FIXME
     "uncompressedSize" / Int32ul,
     "toc0header" / Pointer(this.toc0offset, TOC0Header),
@@ -279,6 +279,9 @@ class NdfBinMain(CommonMain):
             return decompress_ndfbin(data)
         else:
             return data
+
+    def postprocess(self, rebuilt_data: bytes) -> bytes:
+        return compress_ndfbin(rebuilt_data)
 
 
 if __name__ == "__main__":

@@ -41,6 +41,9 @@ class CommonMain:
         f.close()
         return data
 
+    def postprocess(self, rebuilt_data: bytes) -> bytes:
+        return rebuilt_data
+
     def parse(self, args: argparse.Namespace = None):
         if args:
             self.args = self.parser.parse_args(args)
@@ -75,6 +78,7 @@ class CommonMain:
         gc.collect()
         sys.stderr.write("building %s...\n" % self.sc_name)
         rebuilt_data = self.subcon.build(preprocessed_ctx)
+        rebuilt_data = self.postprocess(rebuilt_data)
         sys.stderr.write("writing %s...\n" % self.sc_name)
         file_path = os.path.join(self.args.output, f"{os.path.basename(str(input_path)[:-4])}")
         os.makedirs(os.path.dirname(file_path), exist_ok=True)

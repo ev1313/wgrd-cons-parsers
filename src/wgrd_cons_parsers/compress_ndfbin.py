@@ -24,8 +24,10 @@ def compress_ndfbin(data, update_header=False):
     if update_header:
         parsed_ndfbin.compressed = "compressed"
 
+    parsed_ndfbin.size = len(data)
+    parsed_ndfbin.uncompressedSize = len(data) - 40
+
     if parsed_ndfbin.compressed == "compressed":
-        parsed_ndfbin.uncompressedSize = len(data) - 40
         compressed_data = compress_zlib(data[40:], wbits=15)
 
         return header.build(parsed_ndfbin) + compressed_data

@@ -24,6 +24,8 @@ jobs:
         install-only: true
     - run: pip install -r requirements.txt pyinstaller
     - run: pyinstaller -F src/wgrd_cons_parsers/edat.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/decompress_ndfbin.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/compress_ndfbin.py
     - run: pyinstaller -F src/wgrd_cons_parsers/ndfbin.py
     - run: pyinstaller -F src/wgrd_cons_parsers/tgv.py
     - run: pyinstaller -F src/wgrd_cons_parsers/ppk.py

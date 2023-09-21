@@ -26,12 +26,12 @@ class CommonMain:
         self.sc_name = sc_name
         self.extName = ".%s.xml" % sc_name.lower()
 
-    def add_extra_args(self, input_path: pathlib.Path, ctx=None) -> dict:
+    def add_extra_args(self, input_path: pathlib.Path, output_path: pathlib.Path, ctx=None) -> dict:
         if ctx is None:
             ctx = {}
         extra_args = ctx
         extra_args["_cons_xml_input_directory"] = os.path.dirname(input_path)
-        extra_args["_cons_xml_output_directory"] = self.args.output
+        extra_args["_cons_xml_output_directory"] = output_path
 
         return extra_args
 
@@ -53,16 +53,17 @@ class CommonMain:
     # for use in scripts
     def execute(self, inputs: list[pathlib.Path], output: pathlib.Path = "./out/", pack: bool = False, **extra_args):
         for input_path in inputs:
+            data = self.get_data(input_path)
             if pack:
-                return self.pack(input_path=input_path, output_path=output, **extra_args)
+                return self.pack(input_path=input_path, output_path=output, data=data, **extra_args)
             else:
-                return self.unpack(input_path=input_path, output_path=output, **extra_args)
+                return self.unpack(input_path=input_path, output_path=output, data=data, **extra_args)
 
     def unpack(self, input_path: pathlib.Path, output_path: pathlib.Path, data: bytes, **extra_args):
         sys.stderr.write(f"parsing {self.sc_name} {input_path}\n")
-        ctx = self.add_extra_args(input_path) | extra_args
+        ctx = self.add_extra_args(input_path, output_path) | extra_args
         ctx = self.subcon.parse(data, **ctx)
-        ctx = ctx | self.add_extra_args(input_path) | extra_args
+        ctx = ctx | self.add_extra_args(input_path, output_path) | extra_args
         sys.stderr.write(f"generating xml...\n")
         xml = self.subcon.toET(ctx, name=self.sc_name, is_root=True)
         xml.attrib["_wgrd_cons_parsers_version"] = version_string
@@ -78,7 +79,7 @@ class CommonMain:
     def pack(self, input_path: pathlib.Path, output_path: pathlib.Path, data: bytes, **extra_args):
         xml = ET.fromstring(data.decode("utf-8"))
         sys.stderr.write("rebuilding from xml...\n")
-        ctx = self.add_extra_args(input_path) | extra_args
+        ctx = self.add_extra_args(input_path, output_path) | extra_args
         ctx = self.subcon.fromET(xml, **ctx)
         preprocessed_ctx, _ = self.subcon.preprocess(ctx)
         del xml

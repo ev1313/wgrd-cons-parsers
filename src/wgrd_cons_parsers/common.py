@@ -50,11 +50,19 @@ class CommonMain:
         else:
             self.args = self.parser.parse_args()
 
-    def unpack(self, input_path: pathlib.Path, data: bytes):
+    # for use in scripts
+    def execute(self, inputs: list[pathlib.Path], output: pathlib.Path = "./out/", pack: bool = False, **extra_args):
+        for input_path in inputs:
+            if pack:
+                return self.pack(input_path=input_path, output_path=output, **extra_args)
+            else:
+                return self.unpack(input_path=input_path, output_path=output, **extra_args)
+
+    def unpack(self, input_path: pathlib.Path, output_path: pathlib.Path, data: bytes, **extra_args):
         sys.stderr.write(f"parsing {self.sc_name} {input_path}\n")
-        ctx = self.add_extra_args(input_path)
+        ctx = self.add_extra_args(input_path) | extra_args
         ctx = self.subcon.parse(data, **ctx)
-        ctx = ctx | self.add_extra_args(input_path)
+        ctx = ctx | self.add_extra_args(input_path) | extra_args
         sys.stderr.write(f"generating xml...\n")
         xml = self.subcon.toET(ctx, name=self.sc_name, is_root=True)
         xml.attrib["_wgrd_cons_parsers_version"] = version_string
@@ -62,15 +70,15 @@ class CommonMain:
         ET.indent(xml, space="  ", level=0)
         s = ET.tostring(xml).decode("utf-8")
         sys.stderr.write(f"writing xml {os.path.basename(input_path)}.xml\n")
-        os.makedirs(self.args.output, exist_ok=True)
-        f = open(os.path.join(self.args.output, f"{os.path.basename(input_path)}.xml"), "wb")
+        os.makedirs(output_path, exist_ok=True)
+        f = open(os.path.join(output_path, f"{os.path.basename(input_path)}.xml"), "wb")
         f.write(s.encode("utf-8"))
         f.close()
     
-    def pack(self, input_path: pathlib.Path, data: bytes):
+    def pack(self, input_path: pathlib.Path, output_path: pathlib.Path, data: bytes, **extra_args):
         xml = ET.fromstring(data.decode("utf-8"))
         sys.stderr.write("rebuilding from xml...\n")
-        ctx = self.add_extra_args(input_path)
+        ctx = self.add_extra_args(input_path) | extra_args
         ctx = self.subcon.fromET(xml, **ctx)
         preprocessed_ctx, _ = self.subcon.preprocess(ctx)
         del xml
@@ -80,7 +88,7 @@ class CommonMain:
         rebuilt_data = self.subcon.build(preprocessed_ctx)
         rebuilt_data = self.postprocess(rebuilt_data)
         sys.stderr.write("writing %s...\n" % self.sc_name)
-        file_path = os.path.join(self.args.output, f"{os.path.basename(str(input_path)[:-4])}")
+        file_path = os.path.join(output_path, f"{os.path.basename(str(input_path)[:-4])}")
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         f = open(file_path, "wb")
         f.write(rebuilt_data)
@@ -91,6 +99,6 @@ class CommonMain:
         for input_path in self.args.inputs:
             data = self.get_data(input_path)
             if not self.args.pack:
-                self.unpack(input_path, data)
+                self.unpack(input_path=input_path, output_path=self.args.output, data=data)
             else:
-                self.pack(input_path, data)
+                self.pack(input_path=input_path, output_path=self.args.output, data=data)

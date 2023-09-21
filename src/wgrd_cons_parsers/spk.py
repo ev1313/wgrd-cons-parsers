@@ -44,7 +44,7 @@ def HeaderWithCount(subcon, offset):
         "offset" / Rebuild(Int32ul, offset),
         "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
         "count" / Rebuild(Int32ul, len_(this.data)),
-        "data" / Area(subcon, offset=this.offset, size=this.size, count=this.count)
+        "data" / Area(subcon, offset=this.offset, size=this.size)
     )
     return HWC
 
@@ -110,17 +110,6 @@ DrawCall = Struct(
     "unk1" / Const(0xCDCD, Int16ul),
 )
 
-IbufDataHeader = Struct(
-    "offset" / Int32ul,
-    "size" / Int32ul,
-    "data" / Array(this._.IbufHeader.count,
-                   "IbufData" / Pointer(lambda ctx: ctx.offset + ctx._.IbufHeader.data[ctx._index].offset,
-                                        File(Bytes(lambda ctx: ctx._.IbufHeader.data[ctx._index].size),
-                                             lambda ctx: f"ibufs/ibuf_{ctx._index}_{ctx._.IbufHeader.data[ctx._index].compressed}.bin")
-                                            )
-                                        ),
-)
-
 IbufHeader = Struct(
     "offset" / Rebuild(Int32ul, lambda ctx: 0 if ctx._index == 0 else ctx._.data[ctx._index-1].offset + ctx._.data[ctx._index-1].size),
     "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
@@ -129,6 +118,17 @@ IbufHeader = Struct(
     "compressed" / Enum(Int16ul, uncompressed=0x0, compressed=0xC000),
     #"data" / Lazy(Pointer(this._._.ibufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"ibufs/ibuf_{ctx._index}_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
 )
+
+IbufDataHeader = Struct(
+    "offset" / Int32ul,
+    "size" / Int32ul,
+    "data" / Array(lambda ctx: ctx._.ibufTable.count,
+                   "ibufFile" / Struct("path" / Pointer(lambda ctx: ctx._.offset + ctx._._.ibufTable.data[ctx._index].offset,
+                                        File(Bytes(lambda ctx: ctx._._.ibufTable.data[ctx._index].size),
+                                             lambda ctx: f"ibufs/ibuf_{ctx._index}_{ctx._._.ibufTable.data[ctx._index].compressed}.bin")
+                                        ))
+                   ),
+    )
 
 VbufHeader = Struct(
     "offset" / Rebuild(Int32ul, lambda ctx: 0 if ctx._index == 0 else ctx._.data[ctx._index-1].offset + ctx._.data[ctx._index-1].size),
@@ -139,11 +139,33 @@ VbufHeader = Struct(
     #"data" / Lazy(Pointer(this._._.vbufData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"vbufs/vbuf_{ctx._index}_{ctx.offset}_{ctx.size}_{ctx.count}_{ctx.compressed}.bin")))
 )
 
+VbufDataHeader = Struct(
+    "offset" / Int32ul,
+    "size" / Int32ul,
+    "data" / Array(lambda ctx: ctx._.vbufTable.count,
+                   "vbufFile" / Struct("path" / Pointer(lambda ctx: ctx._.offset + ctx._._.vbufTable.data[ctx._index].offset,
+                                                        File(Bytes(lambda ctx: ctx._._.vbufTable.data[ctx._index].size),
+                                                             lambda ctx: f"vbufs/vbuf_{ctx._index}_{ctx._._.vbufTable.data[ctx._index].compressed}.bin")
+                                                        ))
+                   ),
+    )
+
 NodeHeader = Struct(
     "offset" / Rebuild(Int32ul, lambda ctx: 0 if ctx._index == 0 else ctx._.data[ctx._index-1].offset + ctx._.data[ctx._index-1].size),
     "size" / Rebuild(Int32ul, this._data_meta._ptrsize),
     #"data" / Lazy(Pointer(this._._.nodesData.offset + this.offset, File(Bytes(this.size), lambda ctx: f"nodes/node_{ctx._index}_{ctx.offset}_{ctx.size}.bin")))
 )
+
+NodeDataHeader = Struct(
+    "offset" / Int32ul,
+    "size" / Int32ul,
+    "data" / Array(lambda ctx: ctx._.nodesTable.count,
+                   "nodeFile" / Struct("path" / Pointer(lambda ctx: ctx._.offset + ctx._._.nodesTable.data[ctx._index].offset,
+                                                        File(Bytes(lambda ctx: ctx._._.nodesTable.data[ctx._index].size),
+                                                             lambda ctx: f"nodes/node_{ctx._index}_{ctx._._.nodesTable.data[ctx._index].compressed}.bin")
+                                                        ))
+                   ),
+    )
 
 Spk = Struct(
     "typeMagic" / Const(b"MESH"),
@@ -163,9 +185,9 @@ Spk = Struct(
     "ibufTable" / HeaderWithCount("Ibuf" / IbufHeader, this._.drawCalls.offset + this._.drawCalls.size),
     "ibufData" / IbufDataHeader,
     "vbufTable" / HeaderWithCount("Vbuf" / VbufHeader, this._.ibufTable.offset + this._.ibufTable.size),
-    "vbufData" / EmptyHeader,
+    "vbufData" / VbufDataHeader,
     "nodesTable" / HeaderWithCount("Node" / NodeHeader, this._.vbufTable.offset + this._.vbufTable.size),
-    "nodesData" / EmptyHeader,
+    "nodesData" / NodeDataHeader,
     "unknown10" / HeaderWithCount(Bytes(this.size), this._.nodesTable.offset + this._.nodesTable.size),
     "unknown10indices" / HeaderWithCount(Bytes(this.size), this._.unknown10.offset + this._.unknown10.size),
 )

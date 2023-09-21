@@ -10,13 +10,13 @@ SFormat = Struct(
     "unk1" / Const(0x01, Int8ul),
     "isShort" / Enum(Int8ul, false=0, true=1),
     "channelCount" / Int8ul,
-    "unk3" / Int16ul, # channelCount * 0x200
-    "samplerate" / Int16ul,
+    "frameSize" / Int16ul, # channelCount * 0x200
+    "sampleRate" / Int16ul,
     "frameCount" / Int32ul,
     "unk4" / Int32ul,
     "essLength" / Int32ul,
-    "essUnk2" / Int32ul, # loopstart?
-    "frameCount2" / Int32ul,
+    "loopStart" / Int32ul,
+    "loopEnd" / Int32ul,
     "data" / If(lambda ctx: ctx.isShort == "false",
                Struct(
                    "unkCount" / Int32ul,

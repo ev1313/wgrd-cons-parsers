@@ -127,7 +127,11 @@ class Dictionary(Construct):
         # Start recursion
         self.dictitems = parsePath(stream, [], ending)
 
-        return self._allitems_parsed(stream, **context)
+        parse_files = ctx_get_opt(context, "_cons_xml_filesdictionary_parse_files", True)
+        if parse_files:
+            return self._allitems_parsed(stream, **context)
+        else:
+            return self.dictitems
 
     def _build(self, obj, stream, context, path):
         if obj is None:

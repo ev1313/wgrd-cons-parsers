@@ -2,7 +2,7 @@
 
 from wgrd_cons_parsers.dictionary import *
 
-from dingsda import *
+from dingsda import Struct, Int32ul, Padding, Bytes, Rebuild, this, Const, Magic
 
 from wgrd_cons_parsers.common import CommonMain
 
@@ -41,10 +41,10 @@ class EdatMain(CommonMain):
                             help="don't check for correct checksums of the files")
         super().parse(args)
 
-    def add_extra_args(self, input, ctx={}):
+    def add_extra_args(self, input_path, output_path, ctx={}):
         ctx = ctx | {"_cons_xml_filesdictionary_alignment": not self.args.no_alignment,
                      "_cons_xml_filesdictionary_disable_checks": self.args.disable_checksums}
-        return super().add_extra_args(input, ctx)
+        return super().add_extra_args(input_path=input_path, output_path=output_path, ctx=ctx)
 
 
 if __name__ == "__main__":

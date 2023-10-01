@@ -12,3 +12,4 @@ dist
 build
 *.spec
 *.egg-info
+tests/files/*

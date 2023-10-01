@@ -44,3 +44,20 @@ python -m wgrd_cons_parsers.edat -p out/NDF_Win.dat.xml
 ```
 
 With this setup you can modify the scripts and still use them.
+
+## Tests
+
+For running the tests, a working Wargame Red Dragon installation is required.
+
+Install the [wgrd-cons-tools](https://github.com/ev1313/wgrd-cons-tools) and run the unpacker on the gamefiles:
+
+``` sh
+python -m wgrd_cons_tools.unpack_wgrd <path-to-wargame-red-dragon> -o tests/files/
+```
+
+Then run the tests:
+
+``` sh"
+cd tests
+pytest --pdb *.py
+```

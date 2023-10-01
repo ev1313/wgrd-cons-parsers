@@ -10,7 +10,7 @@ Dic = Struct(
     "count" / Rebuild(Int32ul, len_(this.entries)),
     "entries" / Array(this.count, "Entry" / Struct(
         "hash" / Bytes(8),
-        "offset" / Rebuild(Int32ul, lambda ctx: ctx._._endoffset_entries + sum([x["_ptrsize_string"] for x in ctx._.entries[0:ctx._index]])),
+        "offset" / Rebuild(Int32ul, lambda ctx: ctx._._entries_meta._endoffset + sum([x._string_meta._ptr_size for x in ctx._.entries[0:ctx._index]])),
         "length" / Rebuild(Int32ul, lambda ctx: len(ctx.string)),
         "string" / Pointer(this.offset, PaddedString(this.length*2, "utf-16-le")),
     )),

@@ -33,6 +33,7 @@ jobs:
     - run: pyinstaller -F src/wgrd_cons_parsers/sformat.py
     - run: pyinstaller -F src/wgrd_cons_parsers/dic.py
     - run: pyinstaller -F src/wgrd_cons_parsers/scenario.py
+    - run: pyinstaller -F src/wgrd_cons_parsers/xyz.py
     - uses: actions/upload-artifact@v2
       with:
         path: dist/*

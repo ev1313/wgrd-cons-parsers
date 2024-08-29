@@ -6,7 +6,7 @@ from dingsda import *
 from wgrd_cons_parsers.cons_utils import decompress_zlib
 
 
-def decompress_ndfbin(data):
+def decompress_ndfbin(data, update_header=False):
     header = Struct(
         "magic" / Magic(b"EUG0"),
         "magic2" / Int32ul,
@@ -21,6 +21,9 @@ def decompress_ndfbin(data):
         "uncompressedSize" / Int32ul,
         )
     parsed_header = header.parse(data)
+
+    if update_header:
+        parsed_header.compressed = "uncompressed"
 
     if parsed_header["compressed"] == "compressed":
         uncompressed_data = data[:40] + decompress_zlib(data[44:])

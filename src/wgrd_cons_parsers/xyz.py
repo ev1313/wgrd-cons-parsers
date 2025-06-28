@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from dingsda import *
+from conshex import *
 
 from wgrd_cons_parsers.common import *
 from wgrd_cons_parsers.cons_utils import decompress_zlib

@@ -2,8 +2,8 @@
 
 from wgrd_cons_parsers.common import *
 
-from dingsda import *
-from dingsda.string import *
+from conshex import *
+from conshex.string import *
 
 from wgrd_cons_parsers.utils import align
 from wgrd_cons_parsers.cons_utils import File

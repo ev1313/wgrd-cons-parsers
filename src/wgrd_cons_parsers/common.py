@@ -6,7 +6,7 @@ import argparse
 import pathlib
 import sys
 
-from dingsda import *
+from conshex import *
 import xml.etree.ElementTree as ET
 
 import gc

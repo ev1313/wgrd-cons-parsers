@@ -8,9 +8,9 @@ import argparse
 import pathlib
 from io import BytesIO
 
-from dingsda import *
-from dingsda.string import *
-from dingsda.lazy import *
+from conshex import *
+from conshex.string import *
+from conshex.lazy import *
 
 from wgrd_cons_parsers.cons_utils import *
 

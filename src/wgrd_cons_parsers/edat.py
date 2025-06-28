@@ -2,7 +2,7 @@
 
 from wgrd_cons_parsers.dictionary import *
 
-from dingsda import Struct, Int32ul, Padding, Bytes, Rebuild, this, Const, Magic
+from conshex import Struct, Int32ul, Padding, Bytes, Rebuild, this, Const, Magic
 
 from wgrd_cons_parsers.common import CommonMain
 

@@ -3,9 +3,9 @@
 from wgrd_cons_parsers.common import *
 from wgrd_cons_parsers.cons_utils import *
 
-from dingsda import *
-from dingsda.helpers import *
-from dingsda.string import *
+from conshex import *
+from conshex.helpers import *
+from conshex.string import *
 
 PPKTexture = Struct(
     "id" / Bytes(8),

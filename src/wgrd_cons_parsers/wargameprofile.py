@@ -2,8 +2,8 @@
 
 import pdb
 
-from dingsda import *
-from dingsda.lib import *
+from conshex import *
+from conshex.lib import *
 from wgrd_cons_parsers.cons_utils import *
 from wgrd_cons_parsers.common import CommonMain
 

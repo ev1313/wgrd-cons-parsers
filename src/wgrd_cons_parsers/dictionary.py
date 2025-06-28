@@ -3,9 +3,9 @@ from io import BytesIO
 
 import xml.etree.ElementTree as ET
 
-from dingsda import *
-from dingsda.string import *
-from dingsda.helpers import *
+from conshex import *
+from conshex.string import *
+from conshex.helpers import *
 
 import os
 import hashlib
@@ -274,7 +274,7 @@ class Dictionary(Construct):
 
         ret.pop(f"{name}_list")
         ret.pop("_ignore_root")
-        # remove _, because dingsda rebuild will fail otherwise
+        # remove _, because conshex rebuild will fail otherwise
         if "_" in ret.keys():
             ret.pop("_")
 

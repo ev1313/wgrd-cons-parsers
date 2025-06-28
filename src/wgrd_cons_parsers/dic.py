@@ -2,8 +2,8 @@
 
 from wgrd_cons_parsers.common import *
 
-from dingsda import *
-from dingsda.string import *
+from conshex import *
+from conshex.string import *
 
 Dic = Struct(
     "magic" / Const(b"TRAD"),

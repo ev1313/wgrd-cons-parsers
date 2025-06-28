@@ -2,10 +2,10 @@ import os
 from io import BytesIO
 import xml.etree.ElementTree as ET
 
-from dingsda import *
-from dingsda.lib import *
-from dingsda.helpers import *
-from dingsda.string import *
+from conshex import *
+from conshex.lib import *
+from conshex.helpers import *
+from conshex.string import *
 
 import zlib
 from functools import partial

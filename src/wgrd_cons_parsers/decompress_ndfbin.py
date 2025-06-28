@@ -2,7 +2,7 @@
 
 import sys
 import pdb
-from dingsda import *
+from conshex import *
 from wgrd_cons_parsers.cons_utils import decompress_zlib
 
 

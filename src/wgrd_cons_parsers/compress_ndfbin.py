@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import pdb
 import sys
-from dingsda import *
+from conshex import *
 
 from wgrd_cons_parsers.cons_utils import *
 
